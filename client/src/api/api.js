@@ -38,7 +38,7 @@ export const searchSchedules = async (source, destination, departure_date) => {
   }
 };
 
-export const getFare = async (route_id, coach_number, class_type) => {
+/*export const getFare = async (route_id, coach_number, class_type) => {
   try {
     const res = await fetch(
       `${API_BASE}/api/fares?route_id=${route_id}&coach_number=${coach_number}&class_type=${class_type}`
@@ -48,6 +48,24 @@ export const getFare = async (route_id, coach_number, class_type) => {
   } catch (err) {
     console.warn("⚠️ getFare() failed:", err);
     return null;
+  }
+};*/
+
+// File: client/src/api/api.js
+
+// Find and replace the getFare function
+export const getFare = async (coach_number, class_type) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/fares?coach_number=${encodeURIComponent(coach_number)}&class_type=${encodeURIComponent(class_type)}`);
+    if (!res.ok) {
+        // Create a new error with a more descriptive message
+        const errorData = await res.json().catch(() => ({})); // try to get JSON body, otherwise empty object
+        throw new Error(errorData.error || "Fare not available");
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getFare() failed:", err);
+    throw err; // Re-throw the error to be caught by the component
   }
 };
 
