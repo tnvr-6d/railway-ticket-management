@@ -1077,5 +1077,136 @@ body {
   }
 }
 
+/* --- New Styles for Home Search --- */
+
+.home-search-container {
+  display: flex;
+  gap: 2rem;
+  padding: 3rem 0;
+  background: #ffffff;
+  border-radius: 16px;
+  margin-bottom: 3rem;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.05);
+}
+
+.train-animation-placeholder {
+  flex: 1;
+  padding: 2rem 3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #1e3a8a;
+}
+
+.train-animation-placeholder h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.train-animation-placeholder p {
+    font-size: 1.1rem;
+    color: #64748b;
+    margin-bottom: 2rem;
+}
+
+.train-icon-animation {
+    font-size: 5rem;
+    animation: moveTrain 4s ease-in-out infinite;
+}
+
+@keyframes moveTrain {
+    0% { transform: translateX(-20px); }
+    50% { transform: translateX(20px); }
+    100% { transform: translateX(-20px); }
+}
+
+.search-form-wrapper {
+  flex: 1;
+  padding: 2rem 3rem;
+  border-left: 1px solid #e2e8f0;
+}
+
+.search-form-wrapper h3 {
+    font-size: 1.8rem;
+    color: #1e293b;
+    margin-bottom: 2rem;
+}
+
+/* Enhancements for SearchForm component */
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.search-form input {
+  width: 100%;
+  padding: 1.2rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.search-form input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.search-form button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 1.2rem 2rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.search-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+}
+
+.no-schedules-message {
+    text-align: center;
+    padding: 4rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-top: 2rem;
+    border: 2px dashed #e2e8f0;
+}
+
+.no-schedules-message p {
+    font-size: 1.2rem;
+    color: #64748b;
+}
+
+/* Small improvement for seat info */
+.seat-info-small {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+@media (max-width: 992px) {
+    .home-search-container {
+        flex-direction: column;
+    }
+    .search-form-wrapper {
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 3rem;
+    }
+}
+
 
 
