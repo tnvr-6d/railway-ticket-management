@@ -2,27 +2,27 @@ import React from 'react';
 
 function Footer() {
   return (
-    <footer className="footer">
-      <div className="footer-content">
-        <div className="footer-section">
-          <h4>Railway Booking</h4>
-          <p>Your trusted partner for train travel across the country.</p>
+    <footer className="bg-gray-800 text-gray-300 mt-auto">
+      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 grid md:grid-cols-3 gap-8">
+        <div>
+          <h4 className="font-bold text-lg text-white mb-2">Railway Booking</h4>
+          <p className="text-sm">Your trusted partner for train travel across the country.</p>
         </div>
-        <div className="footer-section">
-          <h4>Quick Links</h4>
-          <p>Book Tickets • Cancel Tickets • Customer Support • Terms & Conditions</p>
+        <div>
+          <h4 className="font-bold text-lg text-white mb-2">Quick Links</h4>
+          <p className="text-sm">Book Tickets • Cancel Tickets • Customer Support • Terms & Conditions</p>
         </div>
-        <div className="footer-section">
-          <h4>Contact Us</h4>
-          <p>
-            📞 01577088591<br />
-            ✉️ support@railway.com<br />
-            🏢 Buet Cse Software company limited
-          </p>
+        <div>
+          <h4 className="font-bold text-lg text-white mb-2">Contact Us</h4>
+          <div className="text-sm space-y-1">
+            <p>📞 01577088591</p>
+            <p>✉️ support@railway.com</p>
+            <p>🏢 Buet Cse Software company limited</p>
+          </div>
         </div>
       </div>
-      <div className="footer-bottom">
-        <p>&copy; 2025 Railway Booking System. All rights reserved.</p>
+      <div className="bg-gray-900 py-4">
+        <p className="text-center text-sm text-gray-400">&copy; 2025 Railway Booking System. All rights reserved.</p>
       </div>
     </footer>
   );
