@@ -41,7 +41,7 @@ router.get('/', async (req, res) => {
       JOIN ticket_booking tb ON t.ticket_id = tb.ticket_id
       JOIN booking b ON tb.booking_id = b.booking_id
       WHERE t.passenger_id = $1
-      ORDER BY s.departure_date DESC, s.departure_time DESC
+      ORDER BY t.ticket_id ASC
     `, [passenger_id]);
 
     res.json(result.rows);
@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-//POST - Book a ticket (Complete booking flow)
+// 🎟️ POST - Book a ticket (Complete booking flow)
 router.post('/', async (req, res) => {
   const { passenger_id, schedule_id, seat_number, payment_method = 'Cash' } = req.body;
   
@@ -152,7 +152,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-//  POST - Cancel a ticket
+// ❌ POST - Cancel a ticket
 router.post('/cancel', async (req, res) => {
   const { ticket_id, reason = 'User requested cancellation' } = req.body;
   
@@ -236,7 +236,7 @@ router.post('/cancel', async (req, res) => {
   }
 });
 
-//GET available seats for a schedule
+// 🪑 GET available seats for a schedule
 router.get('/seats/:schedule_id', async (req, res) => {
   const { schedule_id } = req.params;
 
@@ -271,4 +271,3 @@ router.get('/seats/:schedule_id', async (req, res) => {
 });
 
 module.exports = router;
-
