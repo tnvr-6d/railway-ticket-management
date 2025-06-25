@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+/*import React, { useState, useEffect } from "react";
 import "./App.css";
 import SearchForm from "./components/SearchForm";
 import ScheduleList from "./components/ScheduleList";
@@ -218,8 +218,8 @@ function App() {
   );
 }
 
-export default App;
-/*
+export default App;*/
+
 // src/App.js (Fixed state synchronization bug)
 import React, { useState, useEffect } from "react";
 import "./App.css";
@@ -345,7 +345,7 @@ function App() {
             <h1>🚆 Bangladesh Railway</h1>
           </div>
           <nav className="nav-menu">
-            {// Use the new handler for navigation }
+            {/* Use the new handler for navigation */}
             <button className={`nav-item ${currentView === 'search' ? 'active' : ''}`} onClick={() => handleViewChange('search')}>
               🔍 Book Ticket
             </button>
@@ -453,4 +453,4 @@ function App() {
   );
 }
 
-export default App;*/
+export default App;
