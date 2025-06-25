@@ -1,0 +1,11 @@
+1. Search date fix (older dates will not be shown) + Drop Down dynamic search box 
+
+[Indicating stations]
+
+2. Sort tickets by date
+
+3. Ticket ordering by class and coach
+
+4. MVC Architechture
+
+More data push
