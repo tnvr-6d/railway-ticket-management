@@ -75,7 +75,6 @@ function App() {
     setCurrentView(view);
   };
 
-  // Pre-Login View (Homepage)
   if (!passengerId) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -85,7 +84,6 @@ function App() {
     );
   }
 
-  // Logged-in View
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
@@ -145,9 +143,12 @@ function App() {
                           const isOccupied = !seat.is_available;
                           const isSelected = selectedSeat?.seat_number === seat.seat_number;
                           let seatClasses = "p-2 border-2 rounded-lg text-center cursor-pointer transition ";
-                          if (isOccupied) seatClasses += "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed";
+                          
+                          // --- THIS IS THE MODIFIED LOGIC ---
+                          if (isOccupied) seatClasses += "bg-red-100 border-red-300 text-red-500 cursor-not-allowed";
                           else if (isSelected) seatClasses += "bg-indigo-600 border-indigo-700 text-white font-bold ring-4 ring-indigo-300";
                           else seatClasses += "bg-green-100 border-green-300 hover:bg-green-200 hover:border-green-400";
+                          // --- END OF MODIFICATION ---
 
                           return (
                             <div key={seat.seat_number} className={seatClasses} onClick={() => !isOccupied && setSelectedSeat(seat)}>
