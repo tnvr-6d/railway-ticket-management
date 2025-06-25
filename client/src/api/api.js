@@ -38,20 +38,6 @@ export const searchSchedules = async (source, destination, departure_date) => {
   }
 };
 
-/*export const getFare = async (route_id, coach_number, class_type) => {
-  try {
-    const res = await fetch(
-      `${API_BASE}/api/fares?route_id=${route_id}&coach_number=${coach_number}&class_type=${class_type}`
-    );
-    if (!res.ok) throw new Error("Fare lookup failed");
-    return await res.json();
-  } catch (err) {
-    console.warn("⚠️ getFare() failed:", err);
-    return null;
-  }
-};*/
-
-// File: client/src/api/api.js
 
 // Find and replace the getFare function
 export const getFare = async (coach_number, class_type) => {

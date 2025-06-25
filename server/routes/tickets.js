@@ -51,7 +51,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// 🎟️ POST - Book a ticket (Complete booking flow)
+//POST - Book a ticket (Complete booking flow)
 router.post('/', async (req, res) => {
   const { passenger_id, schedule_id, seat_number, payment_method = 'Cash' } = req.body;
   
@@ -152,7 +152,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// ❌ POST - Cancel a ticket
+//  POST - Cancel a ticket
 router.post('/cancel', async (req, res) => {
   const { ticket_id, reason = 'User requested cancellation' } = req.body;
   
@@ -236,7 +236,7 @@ router.post('/cancel', async (req, res) => {
   }
 });
 
-// 🪑 GET available seats for a schedule
+//GET available seats for a schedule
 router.get('/seats/:schedule_id', async (req, res) => {
   const { schedule_id } = req.params;
 

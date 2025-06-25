@@ -1,11 +1,11 @@
-// src/App.js (Restored Homepage and Added Footer)
+
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import SearchForm from "./components/SearchForm";
 import ScheduleList from "./components/ScheduleList";
 import Login from "./components/Login";
 import MyTickets from "./components/MyTickets";
-import Footer from "./components/Footer"; // <-- Import new Footer component
+import Footer from "./components/Footer";
 import { getSeats, buyTicket } from "./api/api";
 
 function App() {
@@ -219,19 +219,20 @@ function App() {
 }
 
 export default App;
-
-/*// src/App.js (Enhanced with Search Feature)
+/*
+// src/App.js (Fixed state synchronization bug)
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import SearchForm from "./components/SearchForm";
-import ScheduleList from "./components/ScheduleList"; // <-- Import new component
+import ScheduleList from "./components/ScheduleList";
 import Login from "./components/Login";
 import MyTickets from "./components/MyTickets";
-import { getSeats, buyTicket } from "./api/api";
+import Footer from "./components/Footer";
+import { getSeats, buyTicket, searchSchedules } from "./api/api"; // searchSchedules might not be needed here, but good practice
 
 function App() {
   const [passengerId, setPassengerId] = useState(null);
-  const [schedules, setSchedules] = useState([]); // <-- State to hold search results
+  const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [seats, setSeats] = useState([]);
   const [selectedSeat, setSelectedSeat] = useState(null);
@@ -286,22 +287,51 @@ function App() {
   
   const handleSearchResults = (results) => {
     setSchedules(results);
-    setSelectedSchedule(null); // Clear previous selections
+    setSelectedSchedule(null);
   };
 
-  // Login View
+  // --- SOLUTION ---
+  // This function handles view changes and clears stale data
+  const handleViewChange = (view) => {
+    if (view === 'search') {
+      // Clear previous search results to ensure fresh data on next search
+      setSchedules([]);
+      setSelectedSchedule(null);
+    }
+    setCurrentView(view);
+  };
+  // --- END OF SOLUTION ---
+
+  // Pre-Login View (Homepage)
   if (!passengerId) {
     return (
         <div className="App">
             <header className="hero-section">
-                <div className="hero-content">
-                    <h1 className="hero-title">Railway Ticket System</h1>
-                    <p className="hero-subtitle">Book your train tickets with ease and comfort</p>
+              <div className="hero-content">
+                <h1 className="hero-title">Railway Ticket System</h1>
+                <p className="hero-subtitle">Book your train tickets with ease and comfort</p>
+                <div className="hero-features">
+                  <div className="feature-item">
+                    <span className="feature-icon">🚄</span>
+                    <span>Fast Booking</span>
+                  </div>
+                  <div className="feature-item">
+                    <span className="feature-icon">💳</span>
+                    <span>Secure Payment</span>
+                  </div>
+                  <div className="feature-item">
+                    <span className="feature-icon">📱</span>
+                    <span>Mobile Friendly</span>
+                  </div>
                 </div>
+              </div>
             </header>
+    
             <main className="main-content">
-                <Login onLogin={setPassengerId} />
+              <Login onLogin={setPassengerId} />
             </main>
+            
+            <Footer />
         </div>
     );
   }
@@ -315,10 +345,11 @@ function App() {
             <h1>🚆 Bangladesh Railway</h1>
           </div>
           <nav className="nav-menu">
-            <button className={`nav-item ${currentView === 'search' ? 'active' : ''}`} onClick={() => setCurrentView('search')}>
+            {// Use the new handler for navigation }
+            <button className={`nav-item ${currentView === 'search' ? 'active' : ''}`} onClick={() => handleViewChange('search')}>
               🔍 Book Ticket
             </button>
-            <button className={`nav-item ${currentView === 'tickets' ? 'active' : ''}`} onClick={() => setCurrentView('tickets')}>
+            <button className={`nav-item ${currentView === 'tickets' ? 'active' : ''}`} onClick={() => handleViewChange('tickets')}>
               🎫 My Tickets
             </button>
             <div className="nav-user">
@@ -340,22 +371,18 @@ function App() {
         <div className="content-container">
           {currentView === 'search' && (
             <>
-              <div className="home-search-container">
-                  <div className="train-animation-placeholder">
-                      <h2>Your Journey Begins Here</h2>
-                      <p>Reliable, safe, and comfortable travel across Bangladesh.</p>
-                      <div className="train-icon-animation">🚆</div>
-                  </div>
-                  <div className="search-form-wrapper">
-                      <h3>Select Your Source, Destination and Date</h3>
-                      <SearchForm onResults={handleSearchResults} />
-                  </div>
-              </div>
+                <div className="search-card-container">
+                    <div className="search-card-header">
+                      <h2>Find Your Perfect Journey</h2>
+                      <p>Search for trains by source, destination, and date.</p>
+                    </div>
+                    <SearchForm onResults={handleSearchResults} />
+                </div>
               
-              <div className="section-header">
-                  <h2>Available Journeys</h2>
-              </div>
-              <ScheduleList schedules={schedules} onSelectSchedule={setSelectedSchedule} />
+                <div className="section-header">
+                    <h2>Available Journeys</h2>
+                </div>
+                <ScheduleList schedules={schedules} onSelectSchedule={setSelectedSchedule} />
 
               {selectedSchedule && (
                 <div className="booking-section">
@@ -420,6 +447,8 @@ function App() {
           )}
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
