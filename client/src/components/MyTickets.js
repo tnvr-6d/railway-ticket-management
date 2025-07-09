@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getMyTickets, cancelTicket } from '../api/api';
+import { getMyTickets, requestCancellation } from '../api/api';
 
 function MyTickets({ passengerId }) {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [cancellingTicket, setCancellingTicket] = useState(null);
   const [error, setError] = useState('');
+  
+  const [flippedTicketId, setFlippedTicketId] = useState(null);
 
   const fetchTickets = useCallback(async () => {
     if (passengerId) {
@@ -27,15 +29,18 @@ function MyTickets({ passengerId }) {
   }, [fetchTickets]);
 
   const handleCancel = async (ticket) => {
-    const reason = prompt("Enter reason for cancellation:");
-    if (!reason) return;
+    const reason = prompt("Please provide a reason for cancellation:");
+    if (!reason || reason.trim() === '') {
+        alert("A reason is required to request cancellation.");
+        return;
+    }
 
     setCancellingTicket(ticket.ticket_id);
     try {
-      await cancelTicket(ticket.ticket_id, reason);
-      await fetchTickets(); // Refresh tickets after successful cancellation
+      await requestCancellation(ticket.ticket_id, reason);
+      await fetchTickets();
     } catch (error) {
-      alert('Failed to cancel ticket: ' + error.message);
+      alert('Failed to submit cancellation request: ' + error.message);
     } finally {
       setCancellingTicket(null);
     }
@@ -65,53 +70,77 @@ function MyTickets({ passengerId }) {
           <p className="text-gray-500">You haven't booked any tickets yet.</p>
         </div>
       ) : (
-        <div className="grid lg:grid-cols-2 gap-8">
+         <div className="grid lg:grid-cols-2 gap-x-8 gap-y-12 mb-16">
           {tickets.map((ticket) => {
             const isCancelled = ticket.status === 'Cancelled';
-            let headerClass = "p-4 text-white flex justify-between items-center font-bold ";
-            headerClass += isCancelled ? "bg-gradient-to-r from-gray-500 to-gray-600" : "bg-gradient-to-r from-purple-600 to-indigo-600";
-            
-            return (
-              <div key={ticket.ticket_id} className="bg-white rounded-xl shadow-lg flex flex-col">
-                <div className={headerClass}>
-                  <span>Ticket #{ticket.ticket_id}</span>
-                  <span className="px-3 py-1 text-xs rounded-full bg-white/20">{ticket.status}</span>
-                </div>
-                
-                <div className="p-6 flex-grow">
-                  <div className="mb-4">
-                    <div className="flex items-center text-xl font-semibold text-gray-800">
-                      <span>{ticket.source}</span>
-                      <span className="mx-4 text-indigo-400">→</span>
-                      <span>{ticket.destination}</span>
-                    </div>
-                    <div className="text-gray-600 mt-1">🚆 {ticket.train_name}</div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700">
-                    <span><strong>📅 Date:</strong> {formatDate(ticket.departure_date)}</span>
-                    <span><strong>⏰ Departure:</strong> {formatTime(ticket.departure_time)}</span>
-                    <span><strong>🪑 Seat:</strong> {ticket.seat_number} ({ticket.class_type})</span>
-                    <span><strong>🚃 Coach:</strong> {ticket.coach_number}</span>
-                    <span className="font-semibold"><strong>💰 Price:</strong> ${ticket.price}</span>
-                    <span><strong>✔ Booked:</strong> {formatDate(ticket.booking_date)}</span>
-                  </div>
-                </div>
+            const isPending = ticket.status === 'Pending Cancellation';
+            const isFlipped = flippedTicketId === ticket.ticket_id;
 
-                <div className="p-4 bg-gray-50 rounded-b-xl">
-                  {isCancelled ? (
-                    <div className="text-center text-red-600 bg-red-100 p-3 rounded-md">
-                      ❌ This ticket has been cancelled
+            let headerClass = "p-4 text-white flex justify-between items-center font-bold ";
+            if (isCancelled) headerClass += "bg-gradient-to-r from-red-500 to-red-600";
+            else if (isPending) headerClass += "bg-gradient-to-r from-gray-500 to-gray-600";
+            else headerClass += "bg-gradient-to-r from-purple-600 to-indigo-600";
+            
+            const routeString = [
+              ticket.source,
+              ...(ticket.intermediate_stations || []),
+              ticket.destination
+            ].join(' → ');
+
+            return (
+              <div key={ticket.ticket_id} className={`ticket-card ${isFlipped ? 'is-flipped' : ''}`}>
+                <div className="ticket-card-inner">
+                  {/* --- FRONT OF THE CARD --- */}
+                  <div className="ticket-card-front">
+                    <div className={headerClass}>
+                      <span>Ticket #{ticket.ticket_id}</span>
+                      <span className="px-3 py-1 text-xs rounded-full bg-white/20">{ticket.status}</span>
                     </div>
-                  ) : (
-                    <button 
-                      onClick={() => handleCancel(ticket)}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition disabled:opacity-50"
-                      disabled={cancellingTicket === ticket.ticket_id}
-                    >
-                      {cancellingTicket === ticket.ticket_id ? 'Cancelling...' : 'Cancel Ticket'}
-                    </button>
-                  )}
+                    
+                    <div className="p-6 flex-grow">
+                      <div className="mb-4">
+                        <div className="flex items-center text-xl font-semibold text-gray-800">
+                          <span>{ticket.source}</span>
+                          <span className="mx-4 text-indigo-400">→</span>
+                          <span>{ticket.destination}</span>
+                        </div>
+                        <div className="text-gray-600 mt-1">🚆 {ticket.train_name}</div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700">
+                        <span><strong>📅 Date:</strong> {formatDate(ticket.departure_date)}</span>
+                        <span><strong>⏰ Departure:</strong> {formatTime(ticket.departure_time)}</span>
+                        <span><strong>🪑 Seat:</strong> {ticket.seat_number} ({ticket.class_type})</span>
+                        <span><strong>🚃 Coach:</strong> {ticket.coach_number}</span>
+                        <span className="font-semibold"><strong>💰 Price:</strong> ${ticket.price}</span>
+                        <span><strong>✔ Booked:</strong> {formatDate(ticket.booking_date)}</span>
+                      </div>
+
+                      <div className="text-right mt-4">
+                          <button onClick={() => setFlippedTicketId(ticket.ticket_id)} className="text-sm font-semibold text-indigo-600 hover:text-indigo-800">
+                              View Route Stations ↪
+                          </button>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-b-xl">
+                      {isCancelled ? <div className="text-center text-red-600 bg-red-100 p-3 rounded-md">❌ This ticket has been cancelled.</div>
+                       : isPending ? <div className="text-center text-gray-600 bg-gray-200 p-3 rounded-md">⏳ This ticket is pending cancellation approval.</div>
+                       : <button onClick={() => handleCancel(ticket)} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg" disabled={cancellingTicket === ticket.ticket_id}>
+                           {cancellingTicket === ticket.ticket_id ? 'Submitting...' : 'Request Cancellation'}
+                         </button>
+                      }
+                    </div>
+                  </div>
+
+                  {/* --- BACK OF THE CARD --- */}
+                  <div className="ticket-card-back">
+                      <h3 className="text-xl font-bold text-gray-800 mb-4">Route Stations</h3>
+                      <p className="text-center text-gray-700 px-4 leading-relaxed">{routeString}</p>
+                      <button onClick={() => setFlippedTicketId(null)} className="mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg">
+                        Go Back
+                      </button>
+                  </div>
                 </div>
               </div>
             )

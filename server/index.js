@@ -13,6 +13,8 @@ const scheduleRoutes = require('./routes/schedules');
 const fareRoutes = require('./routes/fares');
 const seatRoutes = require('./routes/seats');
 const passengerRoutes = require('./routes/passenger');
+const adminRoutes = require('./routes/admin');
+const classRoutes = require('./routes/classes'); 
 
 // Unified API route prefix
 app.use('/api/trains', trainRoutes);
@@ -21,6 +23,8 @@ app.use('/api/schedules', scheduleRoutes);
 app.use('/api/fares', fareRoutes);
 app.use('/api/seats', seatRoutes);
 app.use('/api/passenger', passengerRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/classes', classRoutes);  
 
 // Default 404 for unmatched API routes
 app.use('/api', (req, res) => {
@@ -32,5 +36,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Backend running at http://localhost:${PORT}`);
 });
-
-

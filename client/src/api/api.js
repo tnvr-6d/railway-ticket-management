@@ -25,10 +25,22 @@ export const getSchedules = async () => {
 };
 
 // Search schedules by source, destination, and date
-export const searchSchedules = async (source, destination, departure_date) => {
+export const getClasses = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/classes`);
+    if (!res.ok) throw new Error("Failed to load class types");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getClasses() failed:", err);
+    return [];
+  }
+};
+
+// MODIFIED search function to include class_type
+export const searchSchedules = async (source, destination, departure_date, class_type) => {
   try {
     const res = await fetch(
-      `${API_BASE}/api/schedules/search?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&departure_date=${departure_date}`
+      `${API_BASE}/api/schedules/search?source=${encodeURIComponent(source)}&destination=${encodeURIComponent(destination)}&departure_date=${departure_date}&class_type=${encodeURIComponent(class_type)}`
     );
     if (!res.ok) throw new Error("Search failed");
     return await res.json();
@@ -113,13 +125,13 @@ export const getMyTickets = async (passengerId) => {
 };
 
 // Passenger login
-export const loginPassenger = async (passenger_id, password) => {
+export const loginPassenger = async (identifier, password) => {
   try {
     const res = await fetch(`${API_BASE}/api/passenger/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        passenger_id: parseInt(passenger_id),
+        identifier: identifier, // Send 'identifier' instead of 'passenger_id'
         password_hash: password,
       }),
     });
@@ -141,4 +153,66 @@ export const loginPassenger = async (passenger_id, password) => {
     };
   }
 };
+export const loginAdmin = async (username, password) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, message: data.message || "Login failed" };
+    }
+    return data;
+  } catch (err) {
+    console.error("❌ loginAdmin() failed:", err);
+    return { success: false, message: "Network error." };
+  }
+};
+
+export const getPendingCancellationRequests = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/tickets/pending-cancellations`);
+    if (!res.ok) throw new Error("Failed to fetch pending requests");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getPendingCancellationRequests() failed:", err);
+    throw err;
+  }
+};
+
+export const confirmCancellationRequest = async (ticket_id, admin_id) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/tickets/confirm-cancellation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticket_id, admin_id }),
+    });
+    if (!res.ok) throw new Error("Failed to confirm cancellation");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ confirmCancellationRequest() failed:", err);
+    throw err;
+  }
+};
+
+
+// --- MODIFIED CANCELLATION FUNCTION ---
+// The old `cancelTicket` is now `requestCancellation`
+export const requestCancellation = async (ticketId, reason) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/tickets/request-cancellation`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticket_id: ticketId, reason }),
+    });
+    if (!res.ok) throw new Error("Failed to request ticket cancellation");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ requestCancellation() failed:", err);
+    throw err;
+  }
+};
+
 

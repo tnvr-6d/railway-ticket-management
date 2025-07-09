@@ -32,18 +32,43 @@ const bookTicket = async (req, res) => {
   }
 };
 
-const cancelTicket = async (req, res) => {
-    const { ticket_id, reason = 'User requested cancellation' } = req.body;
-    
-    if (!ticket_id) {
-        return res.status(400).json({ error: "ticket_id is required" });
+// This function is now for the PASSENGER to REQUEST a cancellation
+const requestCancellation = async (req, res) => {
+    const { ticket_id, reason } = req.body;
+    if (!ticket_id || !reason) {
+        return res.status(400).json({ error: "ticket_id and reason are required" });
     }
-
     try {
-        const result = await ticketModel.cancelTicket(ticket_id, reason);
+        const result = await ticketModel.requestTicketCancellation(ticket_id, reason);
         res.json(result);
     } catch (err) {
-        console.error("❌ Cancellation failed:", err.message);
+        console.error("❌ Cancellation Request failed:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// NEW: Controller for ADMIN to get pending requests
+const getPendingCancellations = async (req, res) => {
+    try {
+        const tickets = await ticketModel.getPendingCancellations();
+        res.json(tickets);
+    } catch (err) {
+        console.error("❌ Fetching pending cancellations failed:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+// NEW: Controller for ADMIN to confirm a cancellation
+const confirmCancellation = async (req, res) => {
+    const { ticket_id, admin_id } = req.body;
+    if (!ticket_id || !admin_id) {
+        return res.status(400).json({ error: "ticket_id and admin_id are required" });
+    }
+    try {
+        const result = await ticketModel.confirmCancellation(ticket_id, admin_id);
+        res.json(result);
+    } catch (err) {
+        console.error("❌ Confirming cancellation failed:", err.message);
         res.status(500).json({ error: err.message });
     }
 };
@@ -63,6 +88,8 @@ const getAvailableSeats = async (req, res) => {
 module.exports = {
   getTicketsByPassenger,
   bookTicket,
-  cancelTicket,
+  requestCancellation,
   getAvailableSeats,
+  getPendingCancellations,
+  confirmCancellation
 };

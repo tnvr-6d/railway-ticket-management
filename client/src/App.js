@@ -4,11 +4,13 @@ import SearchForm from "./components/SearchForm";
 import ScheduleList from "./components/ScheduleList";
 import Login from "./components/Login";
 import MyTickets from "./components/MyTickets";
+import AdminDashboard from "./components/AdminDashboard"; // Import new component
 import Footer from "./components/Footer";
 import { getSeats, buyTicket } from "./api/api";
 
 function App() {
-  const [passengerId, setPassengerId] = useState(null);
+  const [passenger, setPassenger] = useState(null);
+  const [adminUser, setAdminUser] = useState(null); // New state for admin
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [seats, setSeats] = useState([]);
@@ -27,13 +29,14 @@ function App() {
     }
   }, [selectedSchedule]);
 
-  const handleBuy = async () => {
+const handleBuy = async () => {
     if (!selectedSeat) return;
     setBookingLoading(true);
     const ticketData = {
       schedule_id: selectedSchedule.schedule_id,
       seat_number: selectedSeat.seat_number,
-      passenger_id: passengerId,
+      // Use passenger.passenger_id here
+      passenger_id: passenger.passenger_id, 
       payment_method: "Cash",
     };
 
@@ -52,8 +55,9 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
-    setPassengerId(null);
+ const handleLogout = () => {
+    setPassenger(null);
+    setAdminUser(null); // Clear admin user on logout
     setSelectedSchedule(null);
     setSchedules([]);
     setSeats([]);
@@ -61,7 +65,6 @@ function App() {
     setCurrentView("search");
     setMessage("");
   };
-  
   const handleSearchResults = (results) => {
     setSchedules(results);
     setSelectedSchedule(null);
@@ -75,13 +78,41 @@ function App() {
     setCurrentView(view);
   };
 
-  if (!passengerId) {
+if (!passenger && !adminUser) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Login onLogin={setPassengerId} />
+        {/* The onLogin prop now sets the full passenger object */}
+        <Login onLogin={setPassenger} onAdminLogin={setAdminUser} />
         <Footer />
       </div>
     );
+  }
+   if (adminUser) {
+      return (
+        <div className="min-h-screen bg-gray-100 flex flex-col">
+          <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-16">
+                <div className="flex-shrink-0 font-bold text-xl text-purple-600">
+                  👑 Admin Panel - Bangladesh Railway
+                </div>
+                 <div className="flex items-center space-x-2 pl-4">
+                    <span className="text-sm font-medium text-gray-700">👤 Admin: {adminUser.username}</span>
+                    <button onClick={handleLogout} className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50">
+                      Logout
+                    </button>
+                  </div>
+              </div>
+            </div>
+          </header>
+          <main className="flex-grow">
+            <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+                <AdminDashboard adminUser={adminUser} />
+            </div>
+          </main>
+          <Footer />
+        </div>
+      )
   }
 
   return (
@@ -93,18 +124,17 @@ function App() {
               🚆 Bangladesh Railway
             </div>
             <nav className="hidden md:flex items-center space-x-4">
-              <button 
-                onClick={() => handleViewChange('search')}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition ${currentView === 'search' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}>
+              <button onClick={() => handleViewChange('search')} /* ... */>
                 🔍 Book Ticket
               </button>
-              <button 
-                onClick={() => handleViewChange('tickets')}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition ${currentView === 'tickets' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-600 hover:bg-gray-100'}`}>
+              <button onClick={() => handleViewChange('tickets')} /* ... */>
                 🎫 My Tickets
               </button>
               <div className="flex items-center space-x-2 pl-4">
-                <span className="text-sm font-medium text-gray-700">👤 Passenger #{passengerId}</span>
+                {/* --- MODIFIED HEADER DISPLAY --- */}
+                <span className="text-sm font-medium text-gray-700">
+                    👤 {passenger.name} (#{passenger.passenger_id})
+                </span>
                 <button onClick={handleLogout} className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50">
                   Logout
                 </button>
@@ -131,7 +161,7 @@ function App() {
                 <ScheduleList schedules={schedules} onSelectSchedule={setSelectedSchedule} />
               </div>
 
-              {selectedSchedule && (
+        {selectedSchedule && (
                 <div className="mt-12 bg-white rounded-xl shadow-lg p-8">
                   <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Choose Your Seat for {selectedSchedule.train_name}</h3>
                   {loading ? (
@@ -141,20 +171,29 @@ function App() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
                         {seats.map(seat => {
                           const isOccupied = !seat.is_available;
+                          // NEW: Check for pending cancellation status
+                          const isPending = isOccupied && seat.status === 'Pending Cancellation';
                           const isSelected = selectedSeat?.seat_number === seat.seat_number;
+                          
                           let seatClasses = "p-2 border-2 rounded-lg text-center cursor-pointer transition ";
                           
-                          // --- THIS IS THE MODIFIED LOGIC ---
-                          if (isOccupied) seatClasses += "bg-red-100 border-red-300 text-red-500 cursor-not-allowed";
-                          else if (isSelected) seatClasses += "bg-indigo-600 border-indigo-700 text-white font-bold ring-4 ring-indigo-300";
-                          else seatClasses += "bg-green-100 border-green-300 hover:bg-green-200 hover:border-green-400";
-                          // --- END OF MODIFICATION ---
+                          if (isPending) {
+                            seatClasses += "bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed"; // Grey for pending
+                          } else if (isOccupied) {
+                            seatClasses += "bg-red-100 border-red-300 text-red-500 cursor-not-allowed"; // Red for booked
+                          } else if (isSelected) {
+                            seatClasses += "bg-indigo-600 border-indigo-700 text-white font-bold ring-4 ring-indigo-300";
+                          } else {
+                            seatClasses += "bg-green-100 border-green-300 hover:bg-green-200 hover:border-green-400"; // Green for available
+                          }
 
                           return (
-                            <div key={seat.seat_number} className={seatClasses} onClick={() => !isOccupied && setSelectedSeat(seat)}>
+                            <div key={seat.seat_number} className={seatClasses} onClick={() => !isOccupied && !isPending && setSelectedSeat(seat)}>
                               <div className="font-bold text-lg">{seat.seat_number}</div>
                               <div className="text-xs">{seat.class_type}</div>
-                              <div className={`text-sm ${isOccupied ? '' : 'text-green-700'}`}>{isOccupied ? 'Occupied' : `$${seat.price}`}</div>
+                              <div className={`text-sm ${isOccupied ? '' : 'text-green-700'}`}>
+                                {isPending ? 'Pending' : isOccupied ? 'Occupied' : `$${seat.price}`}
+                              </div>
                             </div>
                           )
                         })}
@@ -182,7 +221,8 @@ function App() {
           )}
 
           {currentView === 'tickets' && (
-            <MyTickets passengerId={passengerId} />
+            // Pass the passenger_id to MyTickets
+            <MyTickets passengerId={passenger.passenger_id} />
           )}
         </div>
       </main>

@@ -1208,5 +1208,57 @@ body {
     }
 }
 
+/* --- Styles for Flippable Ticket Card --- */
 
+/* --- Styles for Flippable Ticket Card --- */
 
+/* This is the main container for the card within the grid.
+   It needs a position and a minimum height to act as a stable placeholder. */
+.ticket-card {
+  position: relative; /* This is crucial for child positioning */
+  perspective: 1000px;
+  min-height: 320px; /* Ensures space is reserved in the grid */
+}
+
+/* We raise the z-index of the flipped card's container to ensure it's on top */
+.ticket-card.is-flipped {
+  z-index: 10;
+}
+
+/* This is the inner div that actually performs the 3D rotation.
+   It is positioned absolutely to fill its parent (.ticket-card). */
+.ticket-card-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.7s;
+  transform-style: preserve-3d;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.ticket-card.is-flipped .ticket-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Both faces must be positioned absolutely within the .ticket-card-inner div
+   and must hide their reverse side. */
+.ticket-card-front,
+.ticket-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.75rem;
+  background-color: white;
+}
+
+/* The back face is rotated by default to face away. */
+.ticket-card-back {
+  transform: rotateY(180deg);
+  padding: 1.5rem;
+  justify-content: center;
+  align-items: center;
+}

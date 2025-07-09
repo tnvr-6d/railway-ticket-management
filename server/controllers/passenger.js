@@ -1,40 +1,29 @@
-const passengerModel = require('../models/passenger');
+const passengerModel = require("../models/passenger");
 
 const loginPassenger = async (req, res) => {
-    const { passenger_id, password_hash } = req.body;
+  // Use 'identifier' instead of 'passenger_id'
+  const { identifier, password_hash } = req.body;
+  if (!identifier || !password_hash) {
+    return res.status(400).json({ message: "Identifier and password are required." });
+  }
 
-    console.log("Login attempt:", { passenger_id, password_provided: !!password_hash });
-
-    if (!passenger_id || !password_hash) {
-        return res.status(400).json({ 
-            success: false, 
-            message: "Passenger ID and password are required" 
-        });
-    }
-
-    try {
-        const result = await passengerModel.loginPassenger(passenger_id, password_hash);
-        if (result.success) {
-            res.json({ 
-                success: true, 
-                user: result.user,
-                message: "Login successful"
-            });
-        } else {
-            res.status(401).json({ 
-                success: false, 
-                message: result.message 
-            });
-        }
-    } catch (err) {
-        console.error("Database error:", err);
-        res.status(500).json({ 
-            success: false,
-            error: "Database connection error",
-            message: "Unable to process login request"
-        });
-    }
+  try {
+    const result = await passengerModel.loginPassenger(identifier, password_hash);
+    res.json(result);
+  } catch (err) {
+    res.status(401).json({ success: false, message: err.message });
+  }
 };
+
+// ... keep other controller functions if they exist
+
+module.exports = {
+    loginPassenger,
+    // ... other exports
+};
+
+// ... keep other controller functions if they exist
+
 
 const checkPassenger = async (req, res) => {
     try {
