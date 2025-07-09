@@ -11,13 +11,13 @@ const getAllSchedules = async (req, res) => {
 };
 
 const searchSchedules = async (req, res) => {
-    // Destructure the new class_type from the query
+  
     const { source, destination, departure_date, class_type } = req.query;
-    if (!source || !destination || !departure_date || !class_type) { // class_type is now required
+    if (!source || !destination || !departure_date || !class_type) { 
         return res.status(400).json({ error: "source, destination, departure_date, and class_type are required" });
     }
     try {
-        // Pass class_type to the model function
+        
         const schedules = await scheduleModel.searchSchedules(source, destination, departure_date, class_type);
         res.json(schedules);
     } catch (err) {

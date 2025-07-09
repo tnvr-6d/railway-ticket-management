@@ -283,7 +283,7 @@ module.exports = {
   getTicketsByPassenger,
   bookTicket,
   getAvailableSeats,
-  requestTicketCancellation, // New
-  getPendingCancellations,  // New
-  confirmCancellation       // New
+  requestTicketCancellation, 
+  getPendingCancellations, 
+  confirmCancellation       
 };

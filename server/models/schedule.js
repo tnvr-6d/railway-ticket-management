@@ -30,7 +30,7 @@ const getAllSchedules = async () => {
 };
 
 const searchSchedules = async (source, destination, departure_date, class_type) => {
-    // Note the new 'class_type' parameter
+    
     const query = `
         SELECT DISTINCT
             s.schedule_id, s.departure_time, s.arrival_time, s.departure_date, s.status,

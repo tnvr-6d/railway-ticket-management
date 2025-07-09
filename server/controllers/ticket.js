@@ -32,7 +32,7 @@ const bookTicket = async (req, res) => {
   }
 };
 
-// This function is now for the PASSENGER to REQUEST a cancellation
+
 const requestCancellation = async (req, res) => {
     const { ticket_id, reason } = req.body;
     if (!ticket_id || !reason) {
@@ -47,7 +47,7 @@ const requestCancellation = async (req, res) => {
     }
 };
 
-// NEW: Controller for ADMIN to get pending requests
+
 const getPendingCancellations = async (req, res) => {
     try {
         const tickets = await ticketModel.getPendingCancellations();
@@ -58,7 +58,7 @@ const getPendingCancellations = async (req, res) => {
     }
 };
 
-// NEW: Controller for ADMIN to confirm a cancellation
+
 const confirmCancellation = async (req, res) => {
     const { ticket_id, admin_id } = req.body;
     if (!ticket_id || !admin_id) {

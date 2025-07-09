@@ -4,7 +4,7 @@ const handleSearchStations = async (req, res) => {
     try {
         const query = req.query.q || '';
         if (query.length < 2) {
-            return res.json([]); // Don't search for very short strings
+            return res.json([]); 
         }
         const stations = await stationModel.searchStationsByName(query);
         res.json(stations);

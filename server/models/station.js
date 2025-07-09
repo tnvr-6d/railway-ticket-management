@@ -1,6 +1,6 @@
 const pool = require("../db");
 
-// Search for stations by name, case-insensitive, with a limit for performance.
+
 const searchStationsByName = async (query) => {
     const sql = `
         SELECT station_name FROM station 

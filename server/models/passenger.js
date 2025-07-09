@@ -32,7 +32,7 @@ const loginPassenger = async (identifier, password, ip_address, device_info) => 
             throw new Error("Invalid credentials");
         }
 
-        // On success, log it and return the user object
+       
         await pool.query("SELECT log_login_attempt($1, $2, $3, $4)", [passenger.passenger_id, ip_address, device_info, true]);
         
         return {
@@ -44,7 +44,7 @@ const loginPassenger = async (identifier, password, ip_address, device_info) => 
         };
 
     } catch (err) {
-        // On failure, log it and re-throw the error
+        
         const passenger_id_to_log = passenger ? passenger.passenger_id : null;
         await pool.query("SELECT log_login_attempt($1, $2, $3, $4)", [passenger_id_to_log, ip_address, device_info, false]);
         throw err;
