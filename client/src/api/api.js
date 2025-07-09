@@ -215,4 +215,14 @@ export const requestCancellation = async (ticketId, reason) => {
   }
 };
 
-
+export const searchStations = async (query) => {
+  if (!query || query.length < 2) return [];
+  try {
+    const res = await fetch(`${API_BASE}/api/stations/search?q=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error("Station search failed");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ searchStations() failed:", err);
+    return [];
+  }
+};

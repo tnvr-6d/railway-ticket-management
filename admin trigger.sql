@@ -1,11 +1,3 @@
--- This command removes the trigger from the 'ticket' table.
-DROP TRIGGER IF EXISTS after_ticket_cancellation ON ticket;
-
--- This command removes the function itself.
-DROP FUNCTION IF EXISTS process_ticket_cancellation();
-
-SELECT * FROM TICKET_CANCELLATION
-
 -- Create the function to process the cancellation
 CREATE OR REPLACE FUNCTION process_ticket_cancellation()
 RETURNS TRIGGER AS $$
@@ -14,9 +6,6 @@ DECLARE
     v_admin_id INTEGER;
     v_refund_amount NUMERIC(10, 2);
 BEGIN
-
-SELECT * FROM PASSENGER
-SELECT * FROM admin
     -- This logic only runs when a ticket status changes from 'Pending' to 'Cancelled'
     IF OLD.status = 'Pending Cancellation' AND NEW.status = 'Cancelled' THEN
 

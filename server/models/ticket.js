@@ -223,16 +223,16 @@ const confirmCancellation = async (ticket_id, admin_id) => {
     try {
         await client.query('BEGIN');
 
-        // We must ensure admin_id is a valid number
+        
         const safe_admin_id = parseInt(admin_id, 10);
         if (isNaN(safe_admin_id)) {
             throw new Error('Invalid Admin ID.');
         }
 
-        // Set a session variable that the trigger can access
+      
         await client.query(`SET LOCAL myapp.current_admin_id = ${safe_admin_id}`);
         
-        // Update the ticket status, which will fire the trigger
+        //ADMIN TRIGGER
         const result = await client.query(
             "UPDATE ticket SET status = 'Cancelled' WHERE ticket_id = $1 AND status = 'Pending Cancellation'",
             [ticket_id]

@@ -5,6 +5,7 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.set('trust proxy', true); 
 
 // Mount ALL routes under /api
 const trainRoutes = require('./routes/train');
@@ -14,7 +15,8 @@ const fareRoutes = require('./routes/fares');
 const seatRoutes = require('./routes/seats');
 const passengerRoutes = require('./routes/passenger');
 const adminRoutes = require('./routes/admin');
-const classRoutes = require('./routes/classes'); 
+const classRoutes = require('./routes/classes');
+const stationRoutes = require('./routes/station'); 
 
 // Unified API route prefix
 app.use('/api/trains', trainRoutes);
@@ -25,6 +27,7 @@ app.use('/api/seats', seatRoutes);
 app.use('/api/passenger', passengerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/classes', classRoutes);  
+app.use('/api/stations', stationRoutes);
 
 // Default 404 for unmatched API routes
 app.use('/api', (req, res) => {
