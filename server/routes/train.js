@@ -1,16 +1,8 @@
 const express = require('express');
-const router = express.Router(); // ✅ THIS is the correct router
+const router = express.Router();
+const trainController = require('../controllers/train');
 
-const pool = require('../db');
-
-router.get('/', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM train');
-    res.json(result.rows);
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-});
+router.get('/', trainController.getAllTrains);
 
 module.exports = router;
 

@@ -1,22 +1,31 @@
 import React, { useState } from "react";
-import { loginPassenger } from "../api/api";
+import { loginPassenger, loginAdmin } from "../api/api";
 
-function Login({ onLogin }) {
-  const [passengerId, setPassengerId] = useState("");
-  const [password, setPassword] = useState("");
+function Login({ onLogin, onAdminLogin }) {
+  const [loginType, setLoginType] = useState('passenger');
+  
+  // Changed from passengerId to a generic identifier
+  const [loginIdentifier, setLoginIdentifier] = useState("");
+  const [passengerPassword, setPassengerPassword] = useState("");
+  
+  const [adminUsername, setAdminUsername] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const handlePassengerLogin = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const result = await loginPassenger(passengerId, password);
+      // Pass the generic identifier
+      const result = await loginPassenger(loginIdentifier, passengerPassword);
       if (result?.success) {
-        onLogin(result.user.passenger_id);
+        // Pass the whole user object {passenger_id, name} to onLogin
+        onLogin(result.user);
       } else {
-        setError(result?.message || "❌ Invalid Passenger ID or password");
+        setError(result?.message || "❌ Invalid credentials");
       }
     } catch (error) {
       setError("❌ Login failed. Please check your connection and try again.");
@@ -24,6 +33,25 @@ function Login({ onLogin }) {
       setLoading(false);
     }
   };
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+        const result = await loginAdmin(adminUsername, adminPassword);
+        if (result?.success) {
+            onAdminLogin(result.user);
+        } else {
+            setError(result?.message || "❌ Invalid admin credentials.");
+        }
+    } catch (error) {
+        setError("❌ Admin login failed. Please try again.");
+    } finally {
+        setLoading(false);
+    }
+  };
+
 
   return (
     <>
@@ -35,40 +63,59 @@ function Login({ onLogin }) {
       <main className="py-12 px-4">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           <div className="bg-white p-8 rounded-2xl shadow-xl">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">Passenger Login</h2>
-            <p className="text-gray-500 mb-6">Enter your credentials to continue.</p>
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Passenger ID</label>
-                <input
-                  type="number"
-                  placeholder="e.g., 62"
-                  value={passengerId}
-                  onChange={(e) => setPassengerId(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  disabled={loading}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                />
-              </div>
-              {error && <div className="text-red-600 text-sm">{error}</div>}
-              <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 disabled:opacity-50" disabled={loading}>
-                {loading ? "Logging in..." : "Login"}
-              </button>
-            </form>
-          </div>
+            {/* --- LOGIN TYPE TOGGLE --- */}
+            <div className="flex border-b mb-6">
+                <button onClick={() => setLoginType('passenger')} className={`flex-1 py-2 font-semibold ${loginType === 'passenger' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
+                    Passenger Login
+                </button>
+                <button onClick={() => setLoginType('admin')} className={`flex-1 py-2 font-semibold ${loginType === 'admin' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
+                    Admin Login
+                </button>
+            </div>
 
+            {loginType === 'passenger' ? (
+                <form onSubmit={handlePassengerLogin} className="space-y-6">
+                    <h2 className="text-2xl font-bold text-gray-800">Passenger Login</h2>
+                    <div>
+                        {/* Updated Label and Input */}
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Passenger ID or Name</label>
+                        <input 
+                            type="text" 
+                            placeholder="e.g., 62 or Fatima Khatun" 
+                            value={loginIdentifier} 
+                            onChange={(e) => setLoginIdentifier(e.target.value)} 
+                            required disabled={loading} 
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg"/>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" placeholder="Enter your password" value={passengerPassword} onChange={(e) => setPassengerPassword(e.target.value)} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg"/>
+                    </div>
+                    {error && <div className="text-red-600 text-sm">{error}</div>}
+                    <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg" disabled={loading}>
+                        {loading ? "Logging in..." : "Login as Passenger"}
+                    </button>
+                </form>
+            ) : (
+                <form onSubmit={handleAdminLogin} className="space-y-6">
+                     <h2 className="text-2xl font-bold text-gray-800">Admin Login</h2>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Admin Username</label>
+                        <input type="text" placeholder="e.g., admin" value={adminUsername} onChange={(e) => setAdminUsername(e.target.value)} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg"/>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" placeholder="Enter admin password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} required disabled={loading} className="w-full px-4 py-3 border border-gray-300 rounded-lg"/>
+                    </div>
+                     {error && <div className="text-red-600 text-sm">{error}</div>}
+                    <button type="submit" className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg" disabled={loading}>
+                        {loading ? "Logging in..." : "Login as Admin"}
+                    </button>
+                </form>
+            )}
+          </div>
+          
+          {/* --- RESTORED FEATURE CARDS --- */}
           <div className="space-y-6 pt-4">
               <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
                   <div className="text-3xl">🎫</div>
@@ -99,4 +146,3 @@ function Login({ onLogin }) {
 }
 
 export default Login;
-

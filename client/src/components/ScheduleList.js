@@ -4,17 +4,21 @@ import FareLabel from "./FareLabel";
 function ScheduleList({ schedules, onSelectSchedule }) {
   if (!schedules || schedules.length === 0) {
     return (
-      <div className="text-center py-12 px-6 bg-white rounded-lg shadow-md">
-        <p className="text-gray-500">Please search for a route to see available trains.</p>
+      <div className="no-schedules-message">
+        <p>Please search for a route to see available trains.</p>
       </div>
     );
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-      {schedules.map(schedule => (
-        <div key={schedule.schedule_id} className="bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 flex flex-col">
-          <div className="p-4 border-b">
+    <div className="schedule-list-container">
+      {schedules.map((schedule, index) => (
+        <div 
+          key={schedule.schedule_id} 
+          className="schedule-card"
+          style={{ animationDelay: `${index * 100}ms` }} // Staggered animation delay
+        >
+          <div className="p-4 border-b bg-gray-50 rounded-t-xl">
             <h3 className="font-bold text-xl text-indigo-700">{schedule.train_name}</h3>
             <p className="text-sm text-gray-500">
               📅 {new Date(schedule.departure_date).toLocaleDateString()} | ⏰ {schedule.departure_time} → {schedule.arrival_time}
@@ -27,12 +31,12 @@ function ScheduleList({ schedules, onSelectSchedule }) {
             <FareLabel schedule={schedule} />
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-b-xl">
+          <div className="p-4">
             <button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition"
               onClick={() => onSelectSchedule(schedule)}
             >
-              🚆 Book Now
+              Select Seats
             </button>
           </div>
         </div>
