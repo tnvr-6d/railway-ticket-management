@@ -125,40 +125,34 @@ export const getMyTickets = async (passengerId) => {
 };
 
 // Passenger login
-export const loginPassenger = async (identifier, password) => {
+export const loginPassenger = async (email, password) => {
   try {
     const res = await fetch(`${API_BASE}/api/passenger/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        identifier: identifier, // Send 'identifier' instead of 'passenger_id'
+        email: email,
         password_hash: password,
       }),
     });
-
     const data = await res.json();
     if (!res.ok) {
-      return {
-        success: false,
-        message: data.message || "Login failed",
-      };
+      return { success: false, message: data.message || "Login failed" };
     }
-
     return data;
   } catch (err) {
     console.error("❌ loginPassenger() failed:", err);
-    return {
-      success: false,
-      message: "Network error. Please check your connection.",
-    };
+    return { success: false, message: "Network error." };
   }
 };
-export const loginAdmin = async (username, password) => {
+
+// Admin login updated to use email
+export const loginAdmin = async (email, password) => {
   try {
     const res = await fetch(`${API_BASE}/api/admin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
     if (!res.ok) {
