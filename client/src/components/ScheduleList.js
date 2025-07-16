@@ -49,6 +49,24 @@ function ScheduleList({ schedules, onSelectSchedule }) {
                 <span>🕒 {schedule.duration} min</span>
                 <span>📏 {Number(schedule.distance).toFixed(2)} km</span>
               </div>
+              {/* <div className="text-sm text-gray-700 font-semibold mb-1">
+                🪑 {schedule.available_seats} / {schedule.total_seats} seats available
+              </div> */}
+              {(() => {
+                const available = schedule.available_seats;
+                const total = schedule.total_seats;
+                const percent = total > 0 ? available / total : 0;
+                let badgeColor = "bg-green-100 text-green-800 border-green-300";
+                if (percent <= 0.2) badgeColor = "bg-red-100 text-red-700 border-red-300";
+                else if (percent <= 0.5) badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-300";
+                return (
+                  <div className={`flex items-center justify-start gap-2 my-2 px-3 py-2 rounded-full border font-bold text-base shadow-sm w-fit ${badgeColor}`} aria-label={`Seats available: ${available} out of ${total}`}>
+                    <span className="text-xl mr-1"></span>
+                    <span className="text-lg font-extrabold">{available}</span>
+                    <span className="text-gray-600 font-medium text-base">/ {total} seats available</span>
+                  </div>
+                );
+              })()}
               <FareLabel schedule={schedule} />
 
               {schedule.intermediate_stations && schedule.intermediate_stations.length > 0 && (

@@ -57,6 +57,8 @@ function App() {
     try {
       await buyTicket(ticketData);
       setMessage("🎉 Ticket purchased successfully!");
+
+      // Update seats grid
       const updatedSeats = { ...seats };
       const seatToUpdate = updatedSeats[selectedSeat.row_number].find(
         (s) => s.seat_number === selectedSeat.seat_number
@@ -66,6 +68,20 @@ function App() {
         seatToUpdate.status = "Booked";
       }
       setSeats(updatedSeats);
+
+      // --- NEW: Update available_seats in schedules array ---
+      setSchedules((prevSchedules) =>
+        prevSchedules.map((sch) =>
+          sch.schedule_id === selectedSchedule.schedule_id
+            ? {
+                ...sch,
+                available_seats: Math.max(0, (sch.available_seats || 1) - 1),
+              }
+            : sch
+        )
+      );
+      // ------------------------------------------------------
+
       setSelectedSeat(null);
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
@@ -106,14 +122,14 @@ function App() {
   // Helper function to render a single seat
   const renderSeat = (seat) => {
     if (!seat) {
-      return <div className="h-24" />;
+      return <div className="h-36 w-28" />; // Larger placeholder
     }
 
     const isOccupied = !seat.is_available;
     const isPending = isOccupied && seat.status === "Pending Cancellation";
     const isSelected = selectedSeat?.seat_number === seat.seat_number;
 
-    const seatClasses = `p-2 border-2 rounded-lg text-center cursor-pointer transition h-24 flex flex-col justify-center items-center relative overflow-hidden ${
+    const seatClasses = `seat p-4 border-2 rounded-xl text-center cursor-pointer transition h-36 w-28 flex flex-col justify-center items-center relative overflow-hidden shadow-lg text-lg font-semibold select-none ${
       isSelected ? "seat-selected-pop" : ""
     } ${
       isPending
@@ -133,12 +149,10 @@ function App() {
         className={seatClasses}
         onClick={() => !isOccupied && !isPending && setSelectedSeat(seat)}
       >
-        <div className="font-bold text-lg">{seat.seat_number}</div>
-        <div className="text-xs">{seat.class_type}</div>
+        <div className="font-bold text-xl mb-3 truncate w-full text-center">{seat.seat_number}</div>
+        <div className="text-base mb-1">{seat.class_type}</div>
         <div
-          className={`text-xs mt-1 font-semibold ${
-            isOccupied ? "" : "text-green-700"
-          }`}
+          className={`text-base mt-1 ${isOccupied ? "" : "text-green-700"}`}
         >
           {isPending ? "Pending" : isOccupied ? "Occupied" : `${seat.price}`}
         </div>
@@ -359,16 +373,23 @@ function App() {
                             }
                           });
 
+                          // Render seats with a corridor (gap) between 2nd and 3rd columns only
                           return (
-                            <div key={rowNumber} className="flex justify-center">
-                              <div className="flex flex-1 justify-center gap-x-12 sm:gap-x-24 max-w-2xl">
-                                <div className="grid grid-cols-2 gap-4">
-                                  {fullRow.slice(0, 2).map((seat, index) => renderSeat(seat))}
+                            <div key={rowNumber} className="flex justify-center items-center mb-6">
+                              {/* 1st and 2nd seats with a slight gap */}
+                              {fullRow.slice(0, 2).map((seat, idx) => (
+                                <div key={idx} className="mx-1">
+                                  {renderSeat(seat)}
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                  {fullRow.slice(2, 4).map((seat, index) => renderSeat(seat))}
+                              ))}
+                              {/* Corridor (gap) between 2nd and 3rd */}
+                              <div className="w-10 sm:w-16" />
+                              {/* 3rd and 4th seats with a slight gap */}
+                              {fullRow.slice(2, 4).map((seat, idx) => (
+                                <div key={idx} className="mx-1">
+                                  {renderSeat(seat)}
                                 </div>
-                              </div>
+                              ))}
                             </div>
                           );
                         })}
