@@ -45,6 +45,22 @@ const loginPassenger = async (email, password, ip_address, device_info) => {
     }
 };
 
+const registerPassenger = async (name, email, password_hash, phone_number, address) => {
+    try {
+        const result = await pool.query(
+            "INSERT INTO passenger (name, email, password_hash, phone_number, address) VALUES ($1, $2, $3, $4, $5) RETURNING passenger_id, name, email",
+            [name, email, password_hash, phone_number, address]
+        );
+        return { success: true, user: result.rows[0] };
+        
+    } catch (err) {
+        if (err.code === '23505') { // Unique violation (e.g., duplicate email)
+            throw new Error("Email already registered. Please use a different email or login.");
+        }
+        throw new Error("Database error during registration: " + err.message);
+    }
+};
+
 const checkPassenger = async (id) => {
     const { rows } = await pool.query("SELECT passenger_id, name FROM passenger WHERE passenger_id = $1", [id]);
     return rows[0];
@@ -52,5 +68,6 @@ const checkPassenger = async (id) => {
 
 module.exports = {
     loginPassenger,
+    registerPassenger,
     checkPassenger,
 };

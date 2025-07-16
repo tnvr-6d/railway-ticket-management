@@ -6,19 +6,19 @@ function FareLabel({ schedule }) {
   const [fareInfo, setFareInfo] = useState({ fare: null, error: null, loading: true });
 
   useEffect(() => {
-    if (!schedule?.coach_number || !schedule?.class_type) {
+    if (!schedule?.class_type) {
       setFareInfo({ fare: null, error: 'Incomplete schedule data', loading: false });
       return;
     }
 
     setFareInfo({ fare: null, error: null, loading: true });
 
-    getFare(schedule.coach_number, schedule.class_type)
+    getFare(schedule.class_type)
       .then(fareData => {
         setFareInfo({ fare: fareData, error: null, loading: false });
       })
       .catch(err => {
-        console.warn(`❌ Fare fetch failed for ${schedule.coach_number}:`, err.message);
+        console.warn(`\u274c Fare fetch failed for class ${schedule.class_type}:`, err.message);
         setFareInfo({ fare: null, error: "Fare not available", loading: false });
       });
   }, [schedule]);

@@ -1,45 +1,8 @@
-/* General Resets and Body */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* App-specific styles */
 
-body {
-  font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-  line-height: 1.6;
-  color: #1a1a1a;
-  background-color: #f8fafc; /* Light gray background */
-}
-
-/* Main App Container */
-.App {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* --- Keyframe Animations --- */
-
-/* For hero text and search results */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* --- Hero Section for Search Page --- */
-
+/* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: white;
-  padding: 5rem 1.5rem 8rem; /* More padding at the bottom for the form overlap */
-  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
 }
@@ -51,107 +14,206 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80"><path fill="%235a50e9" fill-opacity="0.2" d="M0 0h40v40H0zM40 40h40v40H40z"></path></svg>');
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
   opacity: 0.3;
 }
 
 .hero-content {
-  position: relative; /* Ensure content is above the pseudo-element */
-  z-index: 1;
-  animation: fadeInUp 0.8s ease-out;
+  position: relative;
+  z-index: 2;
 }
 
-.hero-content h1 {
-  font-size: 3.5rem;
-  font-weight: 800;
-  margin-bottom: 1rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.hero-content p {
-  font-size: 1.25rem;
-  max-width: 600px;
-  margin: 0 auto;
-  opacity: 0.9;
-}
-
-/* --- Search Results & Schedule Cards --- */
-.schedule-list-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
-}
-
+/* Enhanced Cards */
 .schedule-card {
-  background: white;
-  border-radius: 1rem; /* 16px */
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  opacity: 0; /* Start hidden for animation */
-  animation: fadeInUp 0.5s ease-out forwards; /* Apply animation */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.schedule-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #4f46e5, #7c3aed);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .schedule-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
-.no-schedules-message {
-  text-align: center;
-  padding: 4rem 2rem;
-  background-color: #fff;
-  border-radius: 1rem;
-  border: 1px solid #e5e7eb;
+.schedule-card:hover::before {
+  opacity: 1;
 }
 
-/* --- Seat Selection Polish --- */
-.seat-selected-pop {
-  animation: pop 0.3s ease-out;
+/* Ticket Cards */
+.ticket-card {
+  perspective: 1000px;
+  height: 400px;
 }
 
-@keyframes pop {
+.ticket-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.ticket-card-front,
+.ticket-card-back {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.ticket-card-back {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Seat Selection */
+.seat-grid {
+  display: grid;
+  gap: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.seat {
+  position: relative;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.seat::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.seat:hover::before {
+  opacity: 1;
+}
+
+/* Notification Bell */
+.notification-bell {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.notification-bell:hover {
+  transform: scale(1.1);
+}
+
+/* Download Button Animations */
+.download-btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+}
+
+.download-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.download-btn:hover::before {
+  left: 100%;
+}
+
+/* PDF Download Animation */
+@keyframes pdfDownload {
   0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
 
-/* --- Flippable Ticket Card (from previous step, unchanged) --- */
-.ticket-card {
-  position: relative;
-  perspective: 1000px;
-  min-height: 320px;
+.pdf-download-animation {
+  animation: pdfDownload 0.6s ease-in-out;
 }
-.ticket-card.is-flipped {
-  z-index: 10;
+
+/* Route Station Animations */
+.route-station {
+  animation: fadeInUp 0.6s ease-out;
 }
-.ticket-card-inner {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.7s;
-  transform-style: preserve-3d;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+.route-line {
+  animation: expandLine 0.8s ease-out;
 }
-.ticket-card.is-flipped .ticket-card-inner {
-  transform: rotateY(180deg);
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-.ticket-card-front,
-.ticket-card-back {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  display: flex;
-  flex-direction: column;
-  border-radius: 0.75rem;
-  background-color: white;
+
+@keyframes expandLine {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: 2rem;
+    opacity: 1;
+  }
 }
-.ticket-card-back {
-  transform: rotateY(180deg);
-  padding: 1.5rem;
-  justify-content: center;
-  align-items: center;
+
+/* Station dot animations */
+.station-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }

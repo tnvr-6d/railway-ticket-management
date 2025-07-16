@@ -39,21 +39,28 @@ const searchSchedules = async (source, destination, departure_date, class_type) 
             src.station_name AS source,
             dest.station_name AS destination,
             c.class_type,
-            c.class_id
+            c.class_id,
+            (
+                SELECT ARRAY_AGG(st.station_name ORDER BY rs.arrival_time)
+                FROM route_station rs
+                JOIN station st ON rs.station_id = st.station_id
+                WHERE rs.route_id = r.route_id
+                  AND st.station_id != r.source_station_id
+                  AND st.station_id != r.destination_station_id
+            ) AS intermediate_stations
         FROM schedule s
         JOIN train t ON s.train_id = t.train_id
         JOIN route r ON s.route_id = r.route_id
         JOIN station src ON r.source_station_id = src.station_id
         JOIN station dest ON r.destination_station_id = dest.station_id
-        -- We need to join seat_inventory and class to filter and sort
         JOIN seat_inventory si ON s.schedule_id = si.schedule_id
         JOIN class c ON si.class_type = c.class_type
         WHERE src.station_name ILIKE $1
           AND dest.station_name ILIKE $2
           AND s.departure_date = $3
-          AND si.class_type = $4 -- Filter by class type
+          AND si.class_type = $4
         ORDER BY
-          c.class_id DESC, -- Sort by class_id as requested
+          c.class_id DESC,
           s.departure_time;
     `;
     const { rows } = await pool.query(query, [`%${source}%`, `%${destination}%`, departure_date, class_type]);

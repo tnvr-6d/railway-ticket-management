@@ -1,10 +1,11 @@
 const pool = require('../db');
 
-const getFare = async (coach_number, class_type) => {
+const getFare = async (class_type) => {
     const result = await pool.query(`
       SELECT per_km_fare FROM fare
-      WHERE coach_number = $1 AND class_type = $2
-    `, [coach_number, class_type]);
+      WHERE class_type = $1
+      LIMIT 1
+    `, [class_type]);
     return result.rows[0];
 };
 

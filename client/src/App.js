@@ -3,9 +3,13 @@ import "./App.css";
 import SearchForm from "./components/SearchForm";
 import ScheduleList from "./components/ScheduleList";
 import Login from "./components/Login";
+import Signup from "./components/Signup";
 import MyTickets from "./components/MyTickets";
 import AdminDashboard from "./components/AdminDashboard";
 import Footer from "./components/Footer";
+import Contact from "./components/Contact";
+import NotificationBell from "./components/NotificationBell";
+import NotificationsPage from "./components/NotificationsPage";
 import { getSeats, buyTicket } from "./api/api";
 
 function App() {
@@ -13,27 +17,30 @@ function App() {
   const [adminUser, setAdminUser] = useState(null);
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [seats, setSeats] = useState({}); 
+  const [seats, setSeats] = useState({});
   const [selectedSeat, setSelectedSeat] = useState(null);
   const [message, setMessage] = useState("");
-  const [currentView, setCurrentView] = useState("search");
+  const [currentView, setCurrentView] = useState("home");
   const [loading, setLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
 
   useEffect(() => {
     if (selectedSchedule) {
       setLoading(true);
       setSeats({});
       getSeats(selectedSchedule.schedule_id)
-        .then(seatsData => {
-            const groupedSeats = seatsData.reduce((acc, seat) => {
-                const row = seat.row_number;
-                if (!acc[row]) { acc[row] = []; }
-                acc[row].push(seat);
-                acc[row].sort((a, b) => a.column_number - b.column_number);
-                return acc;
-            }, {});
-            setSeats(groupedSeats);
+        .then((seatsData) => {
+          const groupedSeats = seatsData.reduce((acc, seat) => {
+            const row = seat.row_number;
+            if (!acc[row]) {
+              acc[row] = [];
+            }
+            acc[row].push(seat);
+            acc[row].sort((a, b) => a.column_number - b.column_number);
+            return acc;
+          }, {});
+          setSeats(groupedSeats);
         })
         .finally(() => setLoading(false));
     }
@@ -51,10 +58,12 @@ function App() {
       await buyTicket(ticketData);
       setMessage("🎉 Ticket purchased successfully!");
       const updatedSeats = { ...seats };
-      const seatToUpdate = updatedSeats[selectedSeat.row_number].find(s => s.seat_number === selectedSeat.seat_number);
-      if(seatToUpdate) {
+      const seatToUpdate = updatedSeats[selectedSeat.row_number].find(
+        (s) => s.seat_number === selectedSeat.seat_number
+      );
+      if (seatToUpdate) {
         seatToUpdate.is_available = false;
-        seatToUpdate.status = 'Booked';
+        seatToUpdate.status = "Booked";
       }
       setSeats(updatedSeats);
       setSelectedSeat(null);
@@ -73,7 +82,7 @@ function App() {
     setSchedules([]);
     setSeats({});
     setSelectedSeat(null);
-    setCurrentView("search");
+    setCurrentView("home");
     setMessage("");
   };
 
@@ -83,36 +92,59 @@ function App() {
   };
 
   const handleViewChange = (view) => {
-    if (view === 'search') {
+    if (view === "home") {
       setSelectedSchedule(null);
     }
     setCurrentView(view);
   };
 
+  const handlePassengerSignup = (user) => {
+    setPassenger(user);
+    setShowSignup(false);
+  };
+
   // Helper function to render a single seat
   const renderSeat = (seat) => {
-    // If a seat is missing from the data, render a blank placeholder to maintain symmetry.
     if (!seat) {
       return <div className="h-24" />;
     }
 
     const isOccupied = !seat.is_available;
-    const isPending = isOccupied && seat.status === 'Pending Cancellation';
+    const isPending = isOccupied && seat.status === "Pending Cancellation";
     const isSelected = selectedSeat?.seat_number === seat.seat_number;
 
-    const seatClasses = `p-2 border-2 rounded-lg text-center cursor-pointer transition h-24 flex flex-col justify-center items-center relative overflow-hidden ${isSelected ? 'seat-selected-pop' : ''} ${isPending ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed' : isOccupied ? 'bg-red-100 border-red-300 text-red-500 cursor-not-allowed' : isSelected ? 'bg-indigo-600 border-indigo-700 text-white font-bold ring-4 ring-indigo-300' : 'bg-green-100 border-green-300 hover:bg-green-200 hover:border-green-400'}`;
-    
-    // Darkened the shade by increasing opacity from /20 to /30
-    const shadeClass = isOccupied ? 'bg-red-500/30' : 'bg-green-500/30';
+    const seatClasses = `p-2 border-2 rounded-lg text-center cursor-pointer transition h-24 flex flex-col justify-center items-center relative overflow-hidden ${
+      isSelected ? "seat-selected-pop" : ""
+    } ${
+      isPending
+        ? "bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed"
+        : isOccupied
+        ? "bg-red-100 border-red-300 text-red-500 cursor-not-allowed"
+        : isSelected
+        ? "bg-indigo-600 border-indigo-700 text-white font-bold ring-4 ring-indigo-300"
+        : "bg-green-100 border-green-300 hover:bg-green-200 hover:border-green-400"
+    }`;
+
+    const shadeClass = isOccupied ? "bg-red-500/30" : "bg-green-500/30";
 
     return (
-      <div key={seat.seat_number} className={seatClasses} onClick={() => !isOccupied && !isPending && setSelectedSeat(seat)}>
+      <div
+        key={seat.seat_number}
+        className={seatClasses}
+        onClick={() => !isOccupied && !isPending && setSelectedSeat(seat)}
+      >
         <div className="font-bold text-lg">{seat.seat_number}</div>
         <div className="text-xs">{seat.class_type}</div>
-        <div className={`text-xs mt-1 font-semibold ${isOccupied ? '' : 'text-green-700'}`}>
-          {isPending ? 'Pending' : isOccupied ? 'Occupied' : `$${seat.price}`}
+        <div
+          className={`text-xs mt-1 font-semibold ${
+            isOccupied ? "" : "text-green-700"
+          }`}
+        >
+          {isPending ? "Pending" : isOccupied ? "Occupied" : `${seat.price}`}
         </div>
-        <div className={`absolute bottom-0 left-0 right-0 h-1/3 ${shadeClass}`}></div>
+        <div
+          className={`absolute bottom-0 left-0 right-0 h-1/3 ${shadeClass}`}
+        ></div>
       </div>
     );
   };
@@ -120,7 +152,34 @@ function App() {
   if (!passenger && !adminUser) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        <Login onLogin={setPassenger} onAdminLogin={setAdminUser} />
+        {showSignup ? (
+          <Signup onSignup={handlePassengerSignup} />
+        ) : (
+          <Login onLogin={setPassenger} onAdminLogin={setAdminUser} />
+        )}
+        <div className="text-center py-4">
+          {showSignup ? (
+            <p className="text-gray-600">
+              Already have an account?{" "}
+              <button
+                onClick={() => setShowSignup(false)}
+                className="text-indigo-600 hover:underline"
+              >
+                Login here
+              </button>
+            </p>
+          ) : (
+            <p className="text-gray-600">
+              Don't have an account?{" "}
+              <button
+                onClick={() => setShowSignup(true)}
+                className="text-indigo-600 hover:underline"
+              >
+                Sign up here
+              </button>
+            </p>
+          )}
+        </div>
         <Footer />
       </div>
     );
@@ -132,10 +191,19 @@ function App() {
         <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <div className="flex-shrink-0 font-bold text-xl text-purple-600">👑 Admin Panel</div>
+              <div className="flex-shrink-0 font-bold text-xl text-purple-600">
+                👑 Admin Panel
+              </div>
               <div className="flex items-center space-x-2 pl-4">
-                <span className="text-sm font-medium text-gray-700">👤 Admin: {adminUser.username}</span>
-                <button onClick={handleLogout} className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50">Logout</button>
+                <span className="text-sm font-medium text-gray-700">
+                  👤 Admin: {adminUser.username}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
@@ -152,77 +220,177 @@ function App() {
 
   return (
     <div className="App">
-      <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-40">
+      <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-40 border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex-shrink-0 font-bold text-xl text-indigo-600">🚆 Bangladesh Railway</div>
+            <div className="flex-shrink-0 font-bold text-xl gradient-text">
+              🚆 Bangladesh Railway
+            </div>
             <nav className="hidden md:flex items-center space-x-4">
-              <button onClick={() => handleViewChange('search')} className={`px-3 py-2 rounded-md text-sm font-medium ${currentView === 'search' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100'}`}>🔍 Book Ticket</button>
-              <button onClick={() => handleViewChange('tickets')} className={`px-3 py-2 rounded-md text-sm font-medium ${currentView === 'tickets' ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100'}`}>🎫 My Tickets</button>
-              <div className="flex items-center space-x-2 pl-4">
-                <span className="text-sm font-medium text-gray-700">👤 {passenger.name} (#{passenger.passenger_id})</span>
-                <button onClick={handleLogout} className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50">Logout</button>
+              <button
+                onClick={() => handleViewChange("home")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  currentView === "home"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                    : "text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+                }`}
+              >
+                🏠 Home
+              </button>
+              <button
+                onClick={() => handleViewChange("tickets")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  currentView === "tickets"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                    : "text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+                }`}
+              >
+                🎫 My Tickets
+              </button>
+              <button
+                onClick={() => handleViewChange("contact")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  currentView === "contact"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                    : "text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+                }`}
+              >
+                📞 Contact
+              </button>
+              <button
+                onClick={() => handleViewChange("notifications")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  currentView === "notifications"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg"
+                    : "text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
+                }`}
+              >
+                🔔 Notifications
+              </button>
+              <div className="flex items-center space-x-3 pl-4">
+                <NotificationBell passengerId={passenger.passenger_id} />
+                <div className="flex items-center space-x-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700">
+                    👤 {passenger.name} (#{passenger.passenger_id})
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 hover:scale-105 transition-all duration-300"
+                >
+                  Logout
+                </button>
               </div>
             </nav>
           </div>
         </div>
       </header>
 
-      {message && message.text && (
-        <div className={`p-4 fixed top-20 right-8 z-50 rounded-md shadow-lg ${message.type === 'success' ? 'bg-green-100 border-l-4 border-green-500 text-green-700' : 'bg-red-100 border-l-4 border-red-500 text-red-700'}`} role="alert">
-          <p>{message.text}</p>
+      {/* Enhanced message display */}
+      {message && (
+        <div className="message success" role="alert">
+          <p>{message}</p>
         </div>
       )}
 
       <main className="flex-grow">
-        {currentView === 'search' && (
+        {currentView === "home" && (
           <>
-            <div className="hero-section">
-              <div className="hero-content"><h1>Find Your Next Journey</h1><p>Search, select, and book in seconds.</p></div>
+            {/* Enhanced hero section */}
+            <div className="hero-section relative h-96 flex flex-col justify-center items-center">
+              {/* Hero content positioned higher */}
+              <div className="hero-content text-center px-4 mb-4">
+                <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
+                  Find Your Next Journey
+                </h1>
+                <p className="text-lg md:text-xl text-white text-opacity-90 mb-8 max-w-3xl mx-auto">
+                  Search, select, and book your train tickets in seconds with Bangladesh Railway
+                </p>
+                <div className="flex justify-center space-x-4">
+                  <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full">
+                    <span className="text-white font-semibold">🚆 100+ Routes</span>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full">
+                    <span className="text-white font-semibold">⚡ Instant Booking</span>
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full">
+                    <span className="text-white font-semibold">🔒 Secure Payment</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {/* Search form positioned below the hero section */}
+            <div className="relative z-10 w-full max-w-6xl mx-auto px-4">
               <SearchForm onResults={handleSearchResults} />
-              <div className="mt-4"><h2 className="text-3xl font-bold text-gray-800 mb-6">Available Journeys</h2><ScheduleList schedules={schedules} onSelectSchedule={setSelectedSchedule} /></div>
+            </div>
+            
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+              <div className="mt-4">
+                <h2 className="text-3xl font-bold text-gray-800 mb-6">
+                  Available Journeys
+                </h2>
+                <ScheduleList
+                  schedules={schedules}
+                  onSelectSchedule={setSelectedSchedule}
+                />
+              </div>
             </div>
 
             {selectedSchedule && (
               <div className="mt-12 bg-white rounded-xl shadow-lg p-8 max-w-7xl mx-auto">
-                <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">Choose Your Seat for {selectedSchedule.train_name}</h3>
-                {loading ? <div className="text-center text-gray-500">Loading seats...</div> : (
+                <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">
+                  Choose Your Seat for {selectedSchedule.train_name}
+                </h3>
+                {loading ? (
+                  <div className="text-center text-gray-500">
+                    Loading seats...
+                  </div>
+                ) : (
                   <>
                     <div className="space-y-4 max-w-5xl mx-auto">
-                      {Object.keys(seats).sort((a,b) => parseInt(a) - parseInt(b)).map(rowNumber => {
-                        
-                        // --- SYMMETRY FIX: Create a full 4-element array with placeholders ---
-                        const fullRow = Array(4).fill(null);
-                        seats[rowNumber].forEach(seat => {
-                          if(seat.column_number >= 1 && seat.column_number <= 4) {
-                            fullRow[seat.column_number - 1] = seat;
-                          }
-                        });
+                      {Object.keys(seats)
+                        .sort((a, b) => parseInt(a) - parseInt(b))
+                        .map((rowNumber) => {
+                          const fullRow = Array(4).fill(null);
+                          seats[rowNumber].forEach((seat) => {
+                            if (seat.column_number >= 1 && seat.column_number <= 4) {
+                              fullRow[seat.column_number - 1] = seat;
+                            }
+                          });
 
-                        return (
-                          <div key={rowNumber} className="flex justify-center">
-                            <div className="flex flex-1 justify-center gap-x-12 sm:gap-x-24 max-w-2xl">
-                              <div className="grid grid-cols-2 gap-4">
-                                {fullRow.slice(0, 2).map((seat, index) => renderSeat(seat))}
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                {fullRow.slice(2, 4).map((seat, index) => renderSeat(seat))}
+                          return (
+                            <div key={rowNumber} className="flex justify-center">
+                              <div className="flex flex-1 justify-center gap-x-12 sm:gap-x-24 max-w-2xl">
+                                <div className="grid grid-cols-2 gap-4">
+                                  {fullRow.slice(0, 2).map((seat, index) => renderSeat(seat))}
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                  {fullRow.slice(2, 4).map((seat, index) => renderSeat(seat))}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
                     </div>
 
                     {selectedSeat && (
                       <div className="mt-8 max-w-md mx-auto bg-gray-50 p-6 rounded-lg shadow-inner text-center">
                         <h4 className="text-xl font-bold mb-4">Booking Summary</h4>
-                        <p><strong>Seat:</strong> {selectedSeat.seat_number} (Row: {selectedSeat.row_number}, Col: {selectedSeat.column_number})</p>
-                        <p className="font-bold text-lg my-2"><strong>Price:</strong> ${selectedSeat.price}</p>
-                        <button className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg" onClick={handleBuy} disabled={bookingLoading}>
-                          {bookingLoading ? 'Processing...' : '💳 Purchase Ticket'}
+                        <p>
+                          <strong>Seat:</strong> {selectedSeat.seat_number} (Row:{" "}
+                          {selectedSeat.row_number}, Col:{" "}
+                          {selectedSeat.column_number})
+                        </p>
+                        <p className="font-bold text-lg my-2">
+                          <strong>Price:</strong> ${selectedSeat.price}
+                        </p>
+                        <button
+                          className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
+                          onClick={handleBuy}
+                          disabled={bookingLoading}
+                        >
+                          {bookingLoading ? "Processing..." : "💳 Purchase Ticket"}
                         </button>
                       </div>
                     )}
@@ -233,11 +401,17 @@ function App() {
           </>
         )}
 
-        {currentView === 'tickets' && (
+        {currentView === "tickets" && (
           <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
             <MyTickets passengerId={passenger.passenger_id} />
           </div>
         )}
+
+        {currentView === "notifications" && (
+          <NotificationsPage passengerId={passenger.passenger_id} />
+        )}
+
+        {currentView === "contact" && <Contact />}
       </main>
 
       <Footer />

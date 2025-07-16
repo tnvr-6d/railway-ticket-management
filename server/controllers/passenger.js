@@ -20,6 +20,21 @@ const loginPassenger = async (req, res) => {
   }
 };
 
+const registerPassenger = async (req, res) => {
+  const { passengerName, passengerEmail, passengerPassword, passengerPhone, passengerAddress } = req.body;
+
+    if (!passengerName || !passengerEmail || !passengerPassword || !passengerPhone || !passengerAddress) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
+    try {
+        const result = await passengerModel.registerPassenger(passengerName, passengerEmail, passengerPassword, passengerPhone, passengerAddress);
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 const checkPassenger = async (req, res) => {
     try {
         const result = await passengerModel.checkPassenger(req.params.id);
@@ -31,5 +46,6 @@ const checkPassenger = async (req, res) => {
 
 module.exports = {
     loginPassenger,
+    registerPassenger,
     checkPassenger,
 };

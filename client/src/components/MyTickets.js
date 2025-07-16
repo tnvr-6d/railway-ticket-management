@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getMyTickets, requestCancellation } from '../api/api';
+import { generateTicketPDF } from '../utils/pdfGenerator';
 
 function MyTickets({ passengerId }) {
   const [tickets, setTickets] = useState([]);
@@ -46,6 +47,38 @@ function MyTickets({ passengerId }) {
     }
   };
 
+  const handleDownloadPDF = (ticket, event) => {
+    try {
+      // Add visual feedback
+      const button = event.target;
+      button.classList.add('pdf-download-animation');
+      
+      generateTicketPDF(ticket);
+      
+      // Remove animation class after animation completes
+      setTimeout(() => {
+        button.classList.remove('pdf-download-animation');
+      }, 600);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
+  const handleDownloadAllPDFs = () => {
+    if (tickets.length === 0) {
+      alert('No tickets to download.');
+      return;
+    }
+    
+    // Download each ticket as a separate PDF
+    tickets.forEach((ticket, index) => {
+      setTimeout(() => {
+        generateTicketPDF(ticket);
+      }, index * 1000); // Stagger downloads by 1 second
+    });
+  };
+
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   const formatTime = (timeString) => new Date(`1970-01-01T${timeString}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
@@ -58,15 +91,36 @@ function MyTickets({ passengerId }) {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-bold text-gray-800">My Tickets</h2>
-        <button onClick={fetchTickets} className="px-4 py-2 bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-blue-200" disabled={loading}>
-          🔄 Refresh
-        </button>
+      <div className="glass p-6 mb-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-3xl font-bold gradient-text mb-2">My Tickets</h2>
+            <p className="text-gray-600">Manage your railway bookings</p>
+          </div>
+          <div className="flex gap-3">
+            {tickets.length > 0 && (
+              <button 
+                onClick={handleDownloadAllPDFs} 
+                className="download-btn px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 hover:scale-105 flex items-center"
+              >
+                📄 Download All
+              </button>
+            )}
+            <button 
+              onClick={fetchTickets} 
+              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 hover:scale-105" 
+              disabled={loading}
+            >
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
       </div>
 
       {tickets.length === 0 ? (
-        <div className="text-center py-12 px-6 bg-white rounded-lg shadow-md">
+        <div className="text-center py-16 glass">
+          <div className="text-6xl mb-4 float">🎫</div>
+          <h3 className="text-xl font-semibold text-gray-800 mb-2">No tickets yet</h3>
           <p className="text-gray-500">You haven't booked any tickets yet.</p>
         </div>
       ) : (
@@ -88,9 +142,9 @@ function MyTickets({ passengerId }) {
             ].join(' → ');
 
             return (
-              <div key={ticket.ticket_id} className={`ticket-card ${isFlipped ? 'is-flipped' : ''}`}>
-                <div className="ticket-card-inner">
-                  {/* --- FRONT OF THE CARD --- */}
+              <div key={ticket.ticket_id} className="ticket-card">
+                {!isFlipped ? (
+                  // Front of card
                   <div className="ticket-card-front">
                     <div className={headerClass}>
                       <span>Ticket #{ticket.ticket_id}</span>
@@ -116,8 +170,17 @@ function MyTickets({ passengerId }) {
                         <span><strong>✔ Booked:</strong> {formatDate(ticket.booking_date)}</span>
                       </div>
 
-                      <div className="text-right mt-4">
-                          <button onClick={() => setFlippedTicketId(ticket.ticket_id)} className="text-sm font-semibold text-indigo-600 hover:text-indigo-800">
+                      <div className="flex justify-between items-center mt-4">
+                          <button 
+                            onClick={(e) => handleDownloadPDF(ticket, e)} 
+                            className="download-btn text-sm font-semibold text-green-600 hover:text-green-800 flex items-center px-3 py-1 rounded-lg transition-all duration-300"
+                          >
+                            📄 Download PDF
+                          </button>
+                          <button 
+                            onClick={() => setFlippedTicketId(ticket.ticket_id)} 
+                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1 rounded-lg transition-all duration-300"
+                          >
                               View Route Stations ↪
                           </button>
                       </div>
@@ -132,16 +195,76 @@ function MyTickets({ passengerId }) {
                       }
                     </div>
                   </div>
-
-                  {/* --- BACK OF THE CARD --- */}
+                ) : (
+                  // Back of card
                   <div className="ticket-card-back">
-                      <h3 className="text-xl font-bold text-gray-800 mb-4">Route Stations</h3>
-                      <p className="text-center text-gray-700 px-4 leading-relaxed">{routeString}</p>
-                      <button onClick={() => setFlippedTicketId(null)} className="mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-lg">
-                        Go Back
-                      </button>
+                                            <h3 className="text-xl font-bold text-white mb-6">🚆 Journey Route</h3>
+                      
+                      <div className="w-full max-w-sm mx-auto">
+                        <div className="space-y-3">
+                          {/* Source Station */}
+                          <div className="flex items-center">
+                            <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
+                            <div className="ml-3 flex-1">
+                              <div className="text-white font-semibold text-lg">{ticket.source}</div>
+                            </div>
+                          </div>
+                          
+                          {/* Route Line */}
+                          <div className="flex items-center">
+                            <div className="w-0.5 h-6 bg-gradient-to-b from-green-500 to-blue-500 ml-2"></div>
+                          </div>
+                          
+                          {/* Intermediate Stations */}
+                          {(ticket.intermediate_stations || []).map((station, index) => (
+                            <div key={index}>
+                              <div className="flex items-center">
+                                <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-lg"></div>
+                                <div className="ml-3 flex-1">
+                                  <div className="text-white font-medium">{station}</div>
+                                </div>
+                              </div>
+                              {index < (ticket.intermediate_stations || []).length - 1 && (
+                                <div className="flex items-center">
+                                  <div className="w-0.5 h-4 bg-gradient-to-b from-blue-500 to-blue-500 ml-2"></div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          
+                          {/* Route Line to Destination */}
+                          {(ticket.intermediate_stations || []).length > 0 && (
+                            <div className="flex items-center">
+                              <div className="w-0.5 h-6 bg-gradient-to-b from-blue-500 to-red-500 ml-2"></div>
+                            </div>
+                          )}
+                          
+                          {/* Destination Station */}
+                          <div className="flex items-center">
+                            <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg"></div>
+                            <div className="ml-3 flex-1">
+                              <div className="text-white font-semibold text-lg">{ticket.destination}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-3 mt-6">
+                        <button 
+                          onClick={(e) => handleDownloadPDF(ticket, e)} 
+                          className="download-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-300"
+                        >
+                          📄 PDF
+                        </button>
+                        <button 
+                          onClick={() => setFlippedTicketId(null)} 
+                          className="flex-1 bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 border border-white/30"
+                        >
+                          ← Back
+                        </button>
+                      </div>
                   </div>
-                </div>
+                )}
               </div>
             )
           })}
