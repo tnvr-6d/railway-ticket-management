@@ -47,7 +47,15 @@ const searchSchedules = async (source, destination, departure_date, class_type) 
                 WHERE rs.route_id = r.route_id
                   AND st.station_id != r.source_station_id
                   AND st.station_id != r.destination_station_id
-            ) AS intermediate_stations
+            ) AS intermediate_stations,
+            (
+                SELECT COUNT(*) FROM seat_inventory si2
+                WHERE si2.schedule_id = s.schedule_id AND si2.class_type = si.class_type
+            ) AS total_seats,
+            (
+                SELECT COUNT(*) FROM seat_inventory si2
+                WHERE si2.schedule_id = s.schedule_id AND si2.class_type = si.class_type AND si2.is_available = TRUE
+            ) AS available_seats
         FROM schedule s
         JOIN train t ON s.train_id = t.train_id
         JOIN route r ON s.route_id = r.route_id
