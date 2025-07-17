@@ -22,7 +22,16 @@ const getAllFeedback = async () => {
     return result.rows;
 };
 
+const updateFeedbackStatus = async (feedback_id, status) => {
+    const result = await pool.query(
+        `UPDATE feedback SET status = $2 WHERE feedback_id = $1 RETURNING *`,
+        [feedback_id, status]
+    );
+    return result.rows[0];
+};
+
 module.exports = {
     addFeedback,
     getAllFeedback,
+    updateFeedbackStatus,
 }; 

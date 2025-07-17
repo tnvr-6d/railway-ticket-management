@@ -590,3 +590,21 @@ export const getAllFeedback = async () => {
     throw err;
   }
 };
+
+export const updateFeedbackStatus = async (feedback_id, status) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/feedback/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ feedback_id, status }),
+    });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to update feedback status");
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("❌ updateFeedbackStatus() failed:", err);
+    throw err;
+  }
+};

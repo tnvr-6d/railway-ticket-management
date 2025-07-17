@@ -22,7 +22,21 @@ const getAllFeedback = async (req, res) => {
     }
 };
 
+const updateFeedbackStatus = async (req, res) => {
+    const { feedback_id, status } = req.body;
+    if (!feedback_id || !status) {
+        return res.status(400).json({ error: 'feedback_id and status are required.' });
+    }
+    try {
+        const updated = await feedbackModel.updateFeedbackStatus(feedback_id, status);
+        res.json({ success: true, feedback: updated });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     submitFeedback,
     getAllFeedback,
+    updateFeedbackStatus,
 }; 

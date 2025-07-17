@@ -20,7 +20,8 @@ import {
   adminUpdateSeatAvailability,
   adminDeleteSeat,
   adminGetScheduleByTrain,
-  getAllFeedback
+  getAllFeedback,
+  updateFeedbackStatus
 } from '../api/api';
 
 function AdminDashboard({ adminUser }) {
@@ -46,6 +47,7 @@ function AdminDashboard({ adminUser }) {
     const [feedbacks, setFeedbacks] = useState([]);
     const [feedbackLoading, setFeedbackLoading] = useState(false);
     const [feedbackError, setFeedbackError] = useState('');
+    const [feedbackStatusUpdating, setFeedbackStatusUpdating] = useState(null);
 
     // Form states
     const [scheduleForm, setScheduleForm] = useState({
@@ -327,6 +329,18 @@ function AdminDashboard({ adminUser }) {
     };
 
     const formatDate = (dateString) => new Date(dateString).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+    const handleMarkReviewed = async (feedback_id) => {
+        setFeedbackStatusUpdating(feedback_id);
+        try {
+            await updateFeedbackStatus(feedback_id, 'Reviewed');
+            await fetchFeedbacks();
+        } catch (err) {
+            alert('Failed to update feedback status: ' + err.message);
+        } finally {
+            setFeedbackStatusUpdating(null);
+        }
+    };
 
     const renderCancellationsTab = () => (
         <div>
@@ -962,6 +976,7 @@ function AdminDashboard({ adminUser }) {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                             </tr>
                         </thead>
@@ -981,6 +996,17 @@ function AdminDashboard({ adminUser }) {
                                         }`}>
                                             {fb.status}
                                         </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {fb.status !== 'Reviewed' && (
+                                            <button
+                                                onClick={() => handleMarkReviewed(fb.feedback_id)}
+                                                className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md font-semibold disabled:opacity-50"
+                                                disabled={feedbackStatusUpdating === fb.feedback_id}
+                                            >
+                                                {feedbackStatusUpdating === fb.feedback_id ? 'Marking...' : 'Mark Reviewed'}
+                                            </button>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{new Date(fb.created_at).toLocaleString()}</td>
                                 </tr>
