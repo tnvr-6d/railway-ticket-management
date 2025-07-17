@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getMyTickets, requestCancellation } from '../api/api';
+import { submitFeedback } from '../api/api';
 import { generateTicketPDF } from '../utils/pdfGenerator';
 
 function MyTickets({ passengerId }) {
@@ -9,6 +10,15 @@ function MyTickets({ passengerId }) {
   const [error, setError] = useState('');
   
   const [flippedTicketId, setFlippedTicketId] = useState(null);
+
+  // Feedback modal state
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackTicket, setFeedbackTicket] = useState(null);
+  const [feedbackSubject, setFeedbackSubject] = useState('');
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState('');
+  const [feedbackSuccess, setFeedbackSuccess] = useState('');
 
   const fetchTickets = useCallback(async () => {
     if (passengerId) {
@@ -82,6 +92,49 @@ function MyTickets({ passengerId }) {
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   const formatTime = (timeString) => new Date(`1970-01-01T${timeString}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
+  // Feedback modal handlers
+  const openFeedbackModal = (ticket) => {
+    setFeedbackTicket(ticket);
+    setFeedbackSubject('');
+    setFeedbackMessage('');
+    setFeedbackError('');
+    setFeedbackSuccess('');
+    setShowFeedbackModal(true);
+  };
+
+  const closeFeedbackModal = () => {
+    setShowFeedbackModal(false);
+    setFeedbackTicket(null);
+    setFeedbackSubject('');
+    setFeedbackMessage('');
+    setFeedbackError('');
+    setFeedbackSuccess('');
+  };
+
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    setFeedbackLoading(true);
+    setFeedbackError('');
+    setFeedbackSuccess('');
+    try {
+      await submitFeedback({
+        passenger_id: passengerId,
+        ticket_id: feedbackTicket.ticket_id,
+        subject: feedbackSubject,
+        message: feedbackMessage,
+      });
+      setFeedbackSuccess('Feedback submitted successfully!');
+      setTimeout(() => {
+        closeFeedbackModal();
+        fetchTickets();
+      }, 1200);
+    } catch (err) {
+      setFeedbackError(err.message || 'Failed to submit feedback.');
+    } finally {
+      setFeedbackLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-10 text-gray-500">Loading your tickets...</div>;
   }
@@ -129,6 +182,10 @@ function MyTickets({ passengerId }) {
             const isCancelled = ticket.status === 'Cancelled';
             const isPending = ticket.status === 'Pending Cancellation';
             const isFlipped = flippedTicketId === ticket.ticket_id;
+
+            // Feedback: Only allow if not cancelled, not pending, and no feedback yet
+            // For demo, assume ticket.feedback_given is not present; in real app, fetch feedbacks and mark
+            const canGiveFeedback = !isCancelled && !isPending && !ticket.feedback_given;
 
             let headerClass = "p-4 text-white flex justify-between items-center font-bold ";
             if (isCancelled) headerClass += "bg-gradient-to-r from-red-500 to-red-600";
@@ -189,9 +246,19 @@ function MyTickets({ passengerId }) {
                     <div className="p-4 bg-gray-50 rounded-b-xl">
                       {isCancelled ? <div className="text-center text-red-600 bg-red-100 p-3 rounded-md">❌ This ticket has been cancelled.</div>
                        : isPending ? <div className="text-center text-gray-600 bg-gray-200 p-3 rounded-md">⏳ This ticket is pending cancellation approval.</div>
-                       : <button onClick={() => handleCancel(ticket)} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg" disabled={cancellingTicket === ticket.ticket_id}>
-                           {cancellingTicket === ticket.ticket_id ? 'Submitting...' : 'Request Cancellation'}
-                         </button>
+                       : <>
+                          <button onClick={() => handleCancel(ticket)} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg mb-2" disabled={cancellingTicket === ticket.ticket_id}>
+                            {cancellingTicket === ticket.ticket_id ? 'Submitting...' : 'Request Cancellation'}
+                          </button>
+                          {canGiveFeedback && (
+                            <button
+                              onClick={() => openFeedbackModal(ticket)}
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mt-1"
+                            >
+                              Give Feedback
+                            </button>
+                          )}
+                        </>
                       }
                     </div>
                   </div>
@@ -268,6 +335,54 @@ function MyTickets({ passengerId }) {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Feedback Modal */}
+      {showFeedbackModal && feedbackTicket && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md relative">
+            <button
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
+              onClick={closeFeedbackModal}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h3 className="text-2xl font-bold mb-4 text-gray-800">Give Feedback for Ticket #{feedbackTicket.ticket_id}</h3>
+            <form onSubmit={handleFeedbackSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <input
+                  type="text"
+                  value={feedbackSubject}
+                  onChange={e => setFeedbackSubject(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  required
+                  maxLength={100}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea
+                  value={feedbackMessage}
+                  onChange={e => setFeedbackMessage(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2"
+                  rows={4}
+                  required
+                />
+              </div>
+              {feedbackError && <div className="text-red-600 text-sm">{feedbackError}</div>}
+              {feedbackSuccess && <div className="text-green-600 text-sm">{feedbackSuccess}</div>}
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+                disabled={feedbackLoading}
+              >
+                {feedbackLoading ? 'Submitting...' : 'Submit Feedback'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>

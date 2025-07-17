@@ -18,7 +18,7 @@ function App() {
   const [schedules, setSchedules] = useState([]);
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [seats, setSeats] = useState({});
-  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [selectedSeats, setSelectedSeats] = useState([]);
   const [message, setMessage] = useState("");
   const [currentView, setCurrentView] = useState("home");
   const [loading, setLoading] = useState(false);
@@ -47,45 +47,41 @@ function App() {
   }, [selectedSchedule]);
 
   const handleBuy = async () => {
-    if (!selectedSeat) return;
+    if (selectedSeats.length === 0) return;
     setBookingLoading(true);
-    const ticketData = {
-      schedule_id: selectedSchedule.schedule_id,
-      seat_number: selectedSeat.seat_number,
-      passenger_id: passenger.passenger_id,
-    };
     try {
-      await buyTicket(ticketData);
-      setMessage("🎉 Ticket purchased successfully!");
-
-      // Update seats grid
-      const updatedSeats = { ...seats };
-      const seatToUpdate = updatedSeats[selectedSeat.row_number].find(
-        (s) => s.seat_number === selectedSeat.seat_number
-      );
-      if (seatToUpdate) {
-        seatToUpdate.is_available = false;
-        seatToUpdate.status = "Booked";
+      for (const seat of selectedSeats) {
+        const ticketData = {
+          schedule_id: selectedSchedule.schedule_id,
+          seat_number: seat.seat_number,
+          passenger_id: passenger.passenger_id,
+        };
+        await buyTicket(ticketData);
+        // Update seats grid
+        const updatedSeats = { ...seats };
+        const seatToUpdate = updatedSeats[seat.row_number]?.find(
+          (s) => s.seat_number === seat.seat_number
+        );
+        if (seatToUpdate) {
+          seatToUpdate.is_available = false;
+          seatToUpdate.status = "Booked";
+        }
       }
-      setSeats(updatedSeats);
-
-      // --- NEW: Update available_seats in schedules array ---
+      setMessage(`🎉 Ticket${selectedSeats.length > 1 ? 's' : ''} purchased successfully!`);
       setSchedules((prevSchedules) =>
         prevSchedules.map((sch) =>
           sch.schedule_id === selectedSchedule.schedule_id
             ? {
                 ...sch,
-                available_seats: Math.max(0, (sch.available_seats || 1) - 1),
+                available_seats: Math.max(0, (sch.available_seats || selectedSeats.length) - selectedSeats.length),
               }
             : sch
         )
       );
-      // ------------------------------------------------------
-
-      setSelectedSeat(null);
+      setSelectedSeats([]);
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
-      setMessage("❌ Failed to purchase ticket. Please try again.");
+      setMessage("❌ Failed to purchase ticket(s). Please try again.");
     } finally {
       setBookingLoading(false);
     }
@@ -97,7 +93,7 @@ function App() {
     setSelectedSchedule(null);
     setSchedules([]);
     setSeats({});
-    setSelectedSeat(null);
+    setSelectedSeats([]);
     setCurrentView("home");
     setMessage("");
   };
@@ -127,7 +123,7 @@ function App() {
 
     const isOccupied = !seat.is_available;
     const isPending = isOccupied && seat.status === "Pending Cancellation";
-    const isSelected = selectedSeat?.seat_number === seat.seat_number;
+    const isSelected = selectedSeats.some(s => s.seat_number === seat.seat_number);
 
     const seatClasses = `seat p-4 border-2 rounded-xl text-center cursor-pointer transition h-36 w-28 flex flex-col justify-center items-center relative overflow-hidden shadow-lg text-lg font-semibold select-none ${
       isSelected ? "seat-selected-pop" : ""
@@ -147,7 +143,17 @@ function App() {
       <div
         key={seat.seat_number}
         className={seatClasses}
-        onClick={() => !isOccupied && !isPending && setSelectedSeat(seat)}
+        onClick={() => {
+          if (isOccupied || isPending) return;
+          if (isSelected) {
+            setSelectedSeats(selectedSeats.filter(s => s.seat_number !== seat.seat_number));
+          } else if (selectedSeats.length < 5) {
+            setSelectedSeats([...selectedSeats, seat]);
+          } else {
+            setMessage("Only 5 tickets can be purchased under one booking!");
+            setTimeout(() => setMessage(""), 3000);
+          }
+        }}
       >
         <div className="font-bold text-xl mb-3 truncate w-full text-center">{seat.seat_number}</div>
         <div className="text-base mb-1">{seat.class_type}</div>
@@ -395,23 +401,25 @@ function App() {
                         })}
                     </div>
 
-                    {selectedSeat && (
+                    {selectedSeats.length > 0 && (
                       <div className="mt-8 max-w-md mx-auto bg-gray-50 p-6 rounded-lg shadow-inner text-center">
                         <h4 className="text-xl font-bold mb-4">Booking Summary</h4>
-                        <p>
-                          <strong>Seat:</strong> {selectedSeat.seat_number} (Row:{" "}
-                          {selectedSeat.row_number}, Col:{" "}
-                          {selectedSeat.column_number})
-                        </p>
+                        <div className="mb-2 text-left">
+                          {selectedSeats.map(seat => (
+                            <div key={seat.seat_number}>
+                              <strong>Seat:</strong> {seat.seat_number} (Row: {seat.row_number}, Col: {seat.column_number}) - ${seat.price}
+                            </div>
+                          ))}
+                        </div>
                         <p className="font-bold text-lg my-2">
-                          <strong>Price:</strong> ${selectedSeat.price}
+                          <strong>Total Price:</strong> ${selectedSeats.reduce((sum, seat) => sum + Number(seat.price), 0).toFixed(2)}
                         </p>
                         <button
                           className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
                           onClick={handleBuy}
                           disabled={bookingLoading}
                         >
-                          {bookingLoading ? "Processing..." : "💳 Purchase Ticket"}
+                          {bookingLoading ? "Processing..." : `💳 Purchase Ticket${selectedSeats.length > 1 ? 's' : ''}`}
                         </button>
                       </div>
                     )}

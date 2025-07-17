@@ -560,3 +560,33 @@ export const adminGetScheduleByTrain = async (trainId) => {
     throw err;
   }
 };
+
+// ===== FEEDBACK API FUNCTIONS =====
+export const submitFeedback = async (feedbackData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/feedback`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(feedbackData),
+    });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || "Failed to submit feedback");
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("❌ submitFeedback() failed:", err);
+    throw err;
+  }
+};
+
+export const getAllFeedback = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/feedback`);
+    if (!res.ok) throw new Error("Failed to fetch feedback");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getAllFeedback() failed:", err);
+    throw err;
+  }
+};

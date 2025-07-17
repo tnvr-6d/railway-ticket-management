@@ -19,7 +19,8 @@ import {
   adminAddSeatToSchedule,
   adminUpdateSeatAvailability,
   adminDeleteSeat,
-  adminGetScheduleByTrain
+  adminGetScheduleByTrain,
+  getAllFeedback
 } from '../api/api';
 
 function AdminDashboard({ adminUser }) {
@@ -42,6 +43,9 @@ function AdminDashboard({ adminUser }) {
     const [showAddSeat, setShowAddSeat] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState(null);
     const [editingTrain, setEditingTrain] = useState(null);
+    const [feedbacks, setFeedbacks] = useState([]);
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
+    const [feedbackError, setFeedbackError] = useState('');
 
     // Form states
     const [scheduleForm, setScheduleForm] = useState({
@@ -127,12 +131,26 @@ function AdminDashboard({ adminUser }) {
         }
     }, []);
 
+    const fetchFeedbacks = useCallback(async () => {
+        setFeedbackLoading(true);
+        setFeedbackError('');
+        try {
+            const data = await getAllFeedback();
+            setFeedbacks(data || []);
+        } catch (err) {
+            setFeedbackError('Failed to fetch feedback.');
+        } finally {
+            setFeedbackLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         fetchRequests();
         fetchSchedules();
         fetchTrains();
         fetchSupportingData();
-    }, [fetchRequests, fetchSchedules, fetchTrains, fetchSupportingData]);
+        fetchFeedbacks();
+    }, [fetchRequests, fetchSchedules, fetchTrains, fetchSupportingData, fetchFeedbacks]);
 
     useEffect(() => {
         if (selectedTrain) {
@@ -918,6 +936,62 @@ function AdminDashboard({ adminUser }) {
         </div>
     );
 
+    const renderFeedbackTab = () => (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">Passenger Feedback</h2>
+                <button onClick={fetchFeedbacks} className="px-4 py-2 bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-blue-200" disabled={feedbackLoading}>
+                  🔄 Refresh
+                </button>
+            </div>
+            {feedbackError && <div className="text-red-600 text-center p-4 bg-red-100 rounded-md">{feedbackError}</div>}
+            {feedbackLoading ? (
+                <div className="text-center py-10 text-gray-500">Loading feedback...</div>
+            ) : feedbacks.length === 0 ? (
+                <div className="text-center py-12 px-6 bg-white rounded-lg shadow-md">
+                    <p className="text-gray-500">No feedback found.</p>
+                </div>
+            ) : (
+                <div className="bg-white rounded-lg shadow-md overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Feedback ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passenger</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {feedbacks.map(fb => (
+                                <tr key={fb.feedback_id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{fb.feedback_id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fb.passenger_name} (ID: {fb.passenger_id})</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fb.ticket_id} <span className="text-gray-500">({fb.train_name})</span></td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{fb.subject}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-xs truncate" title={fb.message}>{fb.message}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                            fb.status === 'Reviewed' ? 'bg-green-100 text-green-800' :
+                                            fb.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-gray-100 text-gray-800'
+                                        }`}>
+                                            {fb.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{new Date(fb.created_at).toLocaleString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-gray-100">
             <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -964,6 +1038,16 @@ function AdminDashboard({ adminUser }) {
                         >
                             Seat Inventory
                         </button>
+                        <button
+                            onClick={() => setActiveTab('feedback')}
+                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === 'feedback'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Feedback
+                        </button>
                     </nav>
                 </div>
 
@@ -972,6 +1056,7 @@ function AdminDashboard({ adminUser }) {
                 {activeTab === 'schedules' && renderSchedulesTab()}
                 {activeTab === 'trains' && renderTrainsTab()}
                 {activeTab === 'seats' && renderSeatInventoryTab()}
+                {activeTab === 'feedback' && renderFeedbackTab()}
             </div>
         </div>
     );
