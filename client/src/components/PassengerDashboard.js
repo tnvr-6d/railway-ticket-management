@@ -30,14 +30,8 @@ const InfoRow = ({ label, value, copyable }) => (
   </div>
 );
 
-const StatusBadge = ({ isActive }) => (
-  <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${isActive ? "bg-green-100 text-green-700 border border-green-200" : "bg-red-100 text-red-700 border border-red-200"}`}>
-    {isActive ? "Active" : "Inactive"}
-  </span>
-);
-
-const AdminDashboard = ({ admin, onClose }) => {
-  if (!admin) return null;
+const PassengerDashboard = ({ passenger, onClose }) => {
+  if (!passenger) return null;
   const handleBackgroundClick = (e) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -59,23 +53,21 @@ const AdminDashboard = ({ admin, onClose }) => {
         </button>
         <div className="flex flex-col items-center mb-6">
           <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center text-3xl font-bold text-indigo-600 mb-2 border-2 border-indigo-300">
-            {getInitials(admin.username)}
+            {getInitials(passenger.name)}
           </div>
-          <h2 className="text-2xl font-bold text-indigo-700 mb-1">Admin Profile</h2>
+          <h2 className="text-2xl font-bold text-indigo-700 mb-1">Passenger Profile</h2>
+          <span className="text-gray-500 text-sm">ID: {passenger.passenger_id}</span>
         </div>
         <hr className="my-4 border-gray-200" />
         <div className="space-y-2">
-          <InfoRow label="Username" value={admin.username} copyable />
-          <InfoRow label="Email" value={admin.email} copyable />
-          <InfoRow label="Role" value={admin.role} />
-          <div className="flex items-center justify-between py-2">
-            <span className="font-semibold text-gray-600">Status</span>
-            <StatusBadge isActive={admin.is_active} />
-          </div>
+          <InfoRow label="Name" value={passenger.name} />
+          <InfoRow label="Email" value={passenger.email} copyable />
+          <InfoRow label="Phone Number" value={passenger.phone_number} copyable />
+          <InfoRow label="Address" value={passenger.address} />
         </div>
       </div>
     </div>
   );
 };
 
-export default AdminDashboard;
+export default PassengerDashboard; 

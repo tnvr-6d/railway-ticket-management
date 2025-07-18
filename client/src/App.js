@@ -10,7 +10,8 @@ import Footer from "./components/Footer";
 import Contact from "./components/Contact";
 import NotificationBell from "./components/NotificationBell";
 import NotificationsPage from "./components/NotificationsPage";
-import { getSeats, buyTicket } from "./api/api";
+import PassengerDashboard from "./components/PassengerDashboard";
+import { getSeats, buyTicket, getPassengerById } from "./api/api";
 
 function App() {
   const [passenger, setPassenger] = useState(null);
@@ -24,6 +25,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
+  const [showPassengerDashboard, setShowPassengerDashboard] = useState(false);
+  const [dashboardPassenger, setDashboardPassenger] = useState(null);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
 
   useEffect(() => {
     if (selectedSchedule) {
@@ -113,6 +117,29 @@ function App() {
   const handlePassengerSignup = (user) => {
     setPassenger(user);
     setShowSignup(false);
+  };
+
+  const handleOpenPassengerDashboard = async () => {
+    if (!passenger) return;
+    try {
+      const data = await getPassengerById(passenger.passenger_id);
+      setDashboardPassenger(data);
+      setShowPassengerDashboard(true);
+    } catch (err) {
+      setMessage("Failed to load passenger details.");
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
+  const handleClosePassengerDashboard = () => {
+    setShowPassengerDashboard(false);
+    setDashboardPassenger(null);
+  };
+
+  const handleOpenAdminDashboard = () => {
+    setShowAdminDashboard(true);
+  };
+  const handleCloseAdminDashboard = () => {
+    setShowAdminDashboard(false);
   };
 
   // Helper function to render a single seat
@@ -215,7 +242,7 @@ function App() {
                 👑 Admin Panel
               </div>
               <div className="flex items-center space-x-2 pl-4">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 cursor-pointer hover:underline" onClick={handleOpenAdminDashboard} title="View admin profile">
                   👤 Admin: {adminUser.username}
                 </span>
                 <button
@@ -234,6 +261,9 @@ function App() {
           </div>
         </main>
         <Footer />
+        {showAdminDashboard && (
+          <AdminDashboard admin={adminUser} onClose={handleCloseAdminDashboard} />
+        )}
       </div>
     );
   }
@@ -290,7 +320,7 @@ function App() {
               <div className="flex items-center space-x-3 pl-4">
                 <NotificationBell passengerId={passenger.passenger_id} />
                 <div className="flex items-center space-x-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-gray-700 cursor-pointer hover:underline" onClick={handleOpenPassengerDashboard} title="View profile">
                     👤 {passenger.name} (#{passenger.passenger_id})
                   </span>
                 </div>
@@ -444,6 +474,9 @@ function App() {
       </main>
 
       <Footer />
+      {showPassengerDashboard && (
+        <PassengerDashboard passenger={dashboardPassenger} onClose={handleClosePassengerDashboard} />
+      )}
     </div>
   );
 }

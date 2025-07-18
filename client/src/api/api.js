@@ -608,3 +608,14 @@ export const updateFeedbackStatus = async (feedback_id, status) => {
     throw err;
   }
 };
+
+export const getPassengerById = async (passengerId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/passenger/check/${passengerId}`);
+    if (!res.ok) throw new Error("Failed to fetch passenger details");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getPassengerById() failed:", err);
+    throw err;
+  }
+};

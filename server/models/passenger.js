@@ -62,7 +62,7 @@ const registerPassenger = async (name, email, password_hash, phone_number, addre
 };
 
 const checkPassenger = async (id) => {
-    const { rows } = await pool.query("SELECT passenger_id, name FROM passenger WHERE passenger_id = $1", [id]);
+    const { rows } = await pool.query("SELECT passenger_id, name, email, phone_number, address FROM passenger WHERE passenger_id = $1", [id]);
     return rows[0];
 };
 
