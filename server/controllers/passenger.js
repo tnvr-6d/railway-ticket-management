@@ -38,7 +38,6 @@ const registerPassenger = async (req, res) => {
 const checkPassenger = async (req, res) => {
     try {
         const result = await passengerModel.checkPassenger(req.params.id);
-        console.log('DEBUG: checkPassenger result:', result); // Debug print
         res.json(result);
     } catch (err) {
         res.status(500).json({ error: err.message });

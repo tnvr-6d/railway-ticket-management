@@ -12,6 +12,8 @@ import NotificationBell from "./components/NotificationBell";
 import NotificationsPage from "./components/NotificationsPage";
 import PassengerDashboard from "./components/PassengerDashboard";
 import { getSeats, buyTicket, getPassengerById } from "./api/api";
+import AdminProfileModal from "./components/AdminProfileModal";
+
 
 function App() {
   const [passenger, setPassenger] = useState(null);
@@ -242,7 +244,7 @@ function App() {
                 👑 Admin Panel
               </div>
               <div className="flex items-center space-x-2 pl-4">
-                <span className="text-sm font-medium text-gray-700 cursor-pointer hover:underline" onClick={handleOpenAdminDashboard} title="View admin profile">
+              <span className="text-sm font-medium text-gray-700 cursor-pointer hover:underline" onClick={handleOpenAdminDashboard} title="View admin profile">
                   👤 Admin: {adminUser.username}
                 </span>
                 <button
@@ -262,7 +264,7 @@ function App() {
         </main>
         <Footer />
         {showAdminDashboard && (
-          <AdminDashboard admin={adminUser} onClose={handleCloseAdminDashboard} />
+          <AdminProfileModal admin={adminUser} onClose={handleCloseAdminDashboard} />
         )}
       </div>
     );
@@ -320,7 +322,7 @@ function App() {
               <div className="flex items-center space-x-3 pl-4">
                 <NotificationBell passengerId={passenger.passenger_id} />
                 <div className="flex items-center space-x-2 bg-gradient-to-r from-indigo-50 to-purple-50 px-4 py-2 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700 cursor-pointer hover:underline" onClick={handleOpenPassengerDashboard} title="View profile">
+                <span className="text-sm font-medium text-gray-700 cursor-pointer hover:underline" onClick={handleOpenPassengerDashboard} title="View profile">
                     👤 {passenger.name} (#{passenger.passenger_id})
                   </span>
                 </div>
