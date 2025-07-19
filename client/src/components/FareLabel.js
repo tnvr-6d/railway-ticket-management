@@ -32,7 +32,7 @@ function FareLabel({ schedule }) {
   }
 
   const totalFare = Number(schedule.distance) * Number(fareInfo.fare.per_km_fare);
-  return <p>💰 BDT {totalFare.toFixed(2)}</p>;
+  return <p>💰 ৳{totalFare.toFixed(2)}</p>;
 }
 
 export default FareLabel;

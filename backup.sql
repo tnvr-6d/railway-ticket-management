@@ -5,7 +5,7 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-07-19 00:37:04
+-- Started on 2025-07-19 22:14:35
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -818,6 +818,8 @@ INSERT INTO public.booking VALUES (21, 91, '2025-07-16 21:46:32.019425', 25, 'NO
 INSERT INTO public.booking VALUES (20, 91, '2025-07-16 21:46:26.107767', 24, 'nu');
 INSERT INTO public.booking VALUES (25, 62, '2025-07-18 00:13:11.338044', 29, NULL);
 INSERT INTO public.booking VALUES (26, 62, '2025-07-18 00:13:11.642756', 30, NULL);
+INSERT INTO public.booking VALUES (27, 62, '2025-07-19 01:42:16.338169', 31, NULL);
+INSERT INTO public.booking VALUES (28, 62, '2025-07-19 01:42:16.361167', 32, NULL);
 
 
 --
@@ -1037,6 +1039,15 @@ INSERT INTO public.login_history VALUES (66, 91, '2025-07-19 00:24:02.935391', '
 INSERT INTO public.login_history VALUES (67, 91, '2025-07-19 00:30:20.837236', '::1', 'Chrome on Windows', true);
 INSERT INTO public.login_history VALUES (68, 62, '2025-07-19 00:30:49.992646', '::1', 'Chrome on Windows', true);
 INSERT INTO public.login_history VALUES (69, 62, '2025-07-19 00:35:12.745568', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (70, 91, '2025-07-19 00:41:21.332521', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (71, 62, '2025-07-19 00:56:50.402835', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (72, 62, '2025-07-19 01:16:47.642772', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (73, 62, '2025-07-19 01:26:11.407324', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (74, 62, '2025-07-19 01:29:58.68521', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (75, 62, '2025-07-19 01:31:21.290295', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (76, 62, '2025-07-19 01:35:31.776304', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (77, 62, '2025-07-19 01:36:20.560952', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (78, 62, '2025-07-19 22:06:59.469757', '::1', 'Chrome on Windows', true);
 
 
 --
@@ -1139,6 +1150,8 @@ INSERT INTO public.payment VALUES (27, 560.88, '2025-07-16 21:53:35.558044', 'TX
 INSERT INTO public.payment VALUES (28, 560.88, '2025-07-16 21:53:39.700224', 'TXN-1752681219700-91', 'Completed');
 INSERT INTO public.payment VALUES (29, 560.88, '2025-07-18 00:13:11.338044', 'TXN-1752775991340-62', 'Completed');
 INSERT INTO public.payment VALUES (30, 560.88, '2025-07-18 00:13:11.642756', 'TXN-1752775991643-62', 'Completed');
+INSERT INTO public.payment VALUES (31, 251.50, '2025-07-19 01:42:16.338169', 'TXN-1752867736338-62', 'Completed');
+INSERT INTO public.payment VALUES (32, 251.50, '2025-07-19 01:42:16.361167', 'TXN-1752867736361-62', 'Completed');
 
 
 --
@@ -1228,6 +1241,8 @@ INSERT INTO public.schedule VALUES (29, 77, 33, '14:00:00', '20:00:00', '2025-08
 INSERT INTO public.schedule VALUES (30, 78, 33, '14:00:00', '20:00:00', '2025-08-16', 'On Time', '2025-07-09 00:45:16.760782');
 INSERT INTO public.schedule VALUES (31, 55, 31, '16:00:00', '23:00:00', '2025-08-17', 'On Time', '2025-07-09 00:45:16.760782');
 INSERT INTO public.schedule VALUES (32, 79, 31, '07:00:00', '14:00:00', '2025-08-18', 'On Time', '2025-07-09 01:23:41.179655');
+INSERT INTO public.schedule VALUES (34, 81, 39, '09:00:00', '10:00:00', '2025-07-30', 'On Time', '2025-07-19 01:35:25.746628');
+INSERT INTO public.schedule VALUES (33, 80, 39, '08:00:00', '07:30:00', '2025-07-30', 'On Time', '2025-07-19 01:16:27.642529');
 
 
 --
@@ -1335,6 +1350,57 @@ INSERT INTO public.seat_inventory VALUES (90, 32, 'SNG-A1', 'SNIGDHA', 'Snigdha'
 INSERT INTO public.seat_inventory VALUES (95, 32, 'SNG-B3', 'SNIGDHA', 'Snigdha', true, 2, 2);
 INSERT INTO public.seat_inventory VALUES (80, 31, 'SNG-3', 'SNIGDHA', 'Snigdha', false, 1, 3);
 INSERT INTO public.seat_inventory VALUES (84, 31, 'SNG-7', 'SNIGDHA', 'Snigdha', false, 2, 3);
+INSERT INTO public.seat_inventory VALUES (100, 33, 'A1', 'EXECUTIVE', 'Snigdha', true, 1, 1);
+INSERT INTO public.seat_inventory VALUES (101, 33, 'A2', 'EXECUTIVE', 'Snigdha', true, 1, 2);
+INSERT INTO public.seat_inventory VALUES (102, 33, 'A3', 'EXECUTIVE', 'Snigdha', true, 1, 3);
+INSERT INTO public.seat_inventory VALUES (103, 33, 'A4', 'EXECUTIVE', 'Snigdha', true, 1, 4);
+INSERT INTO public.seat_inventory VALUES (104, 33, 'B1', 'EXECUTIVE', 'Snigdha', true, 2, 1);
+INSERT INTO public.seat_inventory VALUES (105, 33, 'B2', 'EXECUTIVE', 'Snigdha', true, 2, 2);
+INSERT INTO public.seat_inventory VALUES (106, 33, 'B3', 'EXECUTIVE', 'Snigdha', true, 2, 3);
+INSERT INTO public.seat_inventory VALUES (107, 33, 'B4', 'EXECUTIVE', 'Snigdha', true, 2, 4);
+INSERT INTO public.seat_inventory VALUES (108, 33, 'C1', 'EXECUTIVE', 'Snigdha', true, 3, 1);
+INSERT INTO public.seat_inventory VALUES (109, 33, 'C2', 'EXECUTIVE', 'Snigdha', true, 3, 2);
+INSERT INTO public.seat_inventory VALUES (110, 33, 'C3', 'EXECUTIVE', 'Snigdha', true, 3, 3);
+INSERT INTO public.seat_inventory VALUES (111, 33, 'C4', 'EXECUTIVE', 'Snigdha', true, 3, 4);
+INSERT INTO public.seat_inventory VALUES (112, 33, 'D1', 'EXECUTIVE', 'Snigdha', true, 4, 1);
+INSERT INTO public.seat_inventory VALUES (113, 33, 'D2', 'EXECUTIVE', 'Snigdha', true, 4, 2);
+INSERT INTO public.seat_inventory VALUES (114, 33, 'D3', 'EXECUTIVE', 'Snigdha', true, 4, 3);
+INSERT INTO public.seat_inventory VALUES (115, 33, 'D4', 'EXECUTIVE', 'Snigdha', true, 4, 4);
+INSERT INTO public.seat_inventory VALUES (116, 33, 'E1', 'EXECUTIVE', 'Snigdha', true, 5, 1);
+INSERT INTO public.seat_inventory VALUES (117, 33, 'E2', 'EXECUTIVE', 'Snigdha', true, 5, 2);
+INSERT INTO public.seat_inventory VALUES (118, 33, 'E3', 'EXECUTIVE', 'Snigdha', true, 5, 3);
+INSERT INTO public.seat_inventory VALUES (119, 33, 'E4', 'EXECUTIVE', 'Snigdha', true, 5, 4);
+INSERT INTO public.seat_inventory VALUES (120, 33, 'F1', 'EXECUTIVE', 'Snigdha', true, 6, 1);
+INSERT INTO public.seat_inventory VALUES (121, 33, 'F2', 'EXECUTIVE', 'Snigdha', true, 6, 2);
+INSERT INTO public.seat_inventory VALUES (122, 33, 'F3', 'EXECUTIVE', 'Snigdha', true, 6, 3);
+INSERT INTO public.seat_inventory VALUES (123, 33, 'F4', 'EXECUTIVE', 'Snigdha', true, 6, 4);
+INSERT INTO public.seat_inventory VALUES (124, 33, 'G1', 'EXECUTIVE', 'Snigdha', true, 7, 1);
+INSERT INTO public.seat_inventory VALUES (125, 33, 'G2', 'EXECUTIVE', 'Snigdha', true, 7, 2);
+INSERT INTO public.seat_inventory VALUES (126, 33, 'G3', 'EXECUTIVE', 'Snigdha', true, 7, 3);
+INSERT INTO public.seat_inventory VALUES (127, 33, 'G4', 'EXECUTIVE', 'Snigdha', true, 7, 4);
+INSERT INTO public.seat_inventory VALUES (128, 33, 'H1', 'EXECUTIVE', 'Snigdha', true, 8, 1);
+INSERT INTO public.seat_inventory VALUES (129, 33, 'H2', 'EXECUTIVE', 'Snigdha', true, 8, 2);
+INSERT INTO public.seat_inventory VALUES (130, 33, 'U1', 'EXECUTIVE', 'Snigdha', true, 8, 3);
+INSERT INTO public.seat_inventory VALUES (131, 34, 'A1', 'AC_CHAIR', 'AC_Chair', true, 1, 1);
+INSERT INTO public.seat_inventory VALUES (132, 34, 'A2', 'AC_CHAIR', 'AC_Chair', true, 1, 2);
+INSERT INTO public.seat_inventory VALUES (133, 34, 'A3', 'AC_CHAIR', 'AC_Chair', true, 1, 3);
+INSERT INTO public.seat_inventory VALUES (134, 34, 'A4', 'AC_CHAIR', 'AC_Chair', true, 1, 4);
+INSERT INTO public.seat_inventory VALUES (135, 34, 'B1', 'AC_CHAIR', 'AC_Chair', true, 2, 1);
+INSERT INTO public.seat_inventory VALUES (138, 34, 'B4', 'AC_CHAIR', 'AC_Chair', true, 2, 4);
+INSERT INTO public.seat_inventory VALUES (139, 34, 'C1', 'AC_CHAIR', 'AC_Chair', true, 3, 1);
+INSERT INTO public.seat_inventory VALUES (140, 34, 'C2', 'AC_CHAIR', 'AC_Chair', true, 3, 2);
+INSERT INTO public.seat_inventory VALUES (141, 34, 'C3', 'AC_CHAIR', 'AC_Chair', true, 3, 3);
+INSERT INTO public.seat_inventory VALUES (142, 34, 'C4', 'AC_CHAIR', 'AC_Chair', true, 3, 4);
+INSERT INTO public.seat_inventory VALUES (143, 34, 'D1', 'AC_CHAIR', 'AC_Chair', true, 4, 1);
+INSERT INTO public.seat_inventory VALUES (144, 34, 'D2', 'AC_CHAIR', 'AC_Chair', true, 4, 2);
+INSERT INTO public.seat_inventory VALUES (145, 34, 'D3', 'AC_CHAIR', 'AC_Chair', true, 4, 3);
+INSERT INTO public.seat_inventory VALUES (146, 34, 'D4', 'AC_CHAIR', 'AC_Chair', true, 4, 4);
+INSERT INTO public.seat_inventory VALUES (147, 34, 'E1', 'AC_CHAIR', 'AC_Chair', true, 5, 1);
+INSERT INTO public.seat_inventory VALUES (148, 34, 'E2', 'AC_CHAIR', 'AC_Chair', true, 5, 2);
+INSERT INTO public.seat_inventory VALUES (149, 34, 'E3', 'AC_CHAIR', 'AC_Chair', true, 5, 3);
+INSERT INTO public.seat_inventory VALUES (150, 34, 'E4', 'AC_CHAIR', 'AC_Chair', true, 5, 4);
+INSERT INTO public.seat_inventory VALUES (136, 34, 'B2', 'AC_CHAIR', 'AC_Chair', false, 2, 2);
+INSERT INTO public.seat_inventory VALUES (137, 34, 'B3', 'AC_CHAIR', 'AC_Chair', false, 2, 3);
 
 
 --
@@ -1405,6 +1471,8 @@ INSERT INTO public.ticket VALUES (20, 6, 91, 32, '2025-07-16 21:46:32.019425', '
 INSERT INTO public.ticket VALUES (19, 6, 91, 32, '2025-07-16 21:46:26.107767', 'SNG-B3', 560.88, 'Cancelled', 24);
 INSERT INTO public.ticket VALUES (24, 6, 62, 31, '2025-07-18 00:13:11.338044', 'SNG-3', 560.88, 'Booked', 29);
 INSERT INTO public.ticket VALUES (25, 6, 62, 31, '2025-07-18 00:13:11.642756', 'SNG-7', 560.88, 'Booked', 30);
+INSERT INTO public.ticket VALUES (26, 7, 62, 34, '2025-07-19 01:42:16.338169', 'B2', 251.50, 'Booked', 31);
+INSERT INTO public.ticket VALUES (27, 7, 62, 34, '2025-07-19 01:42:16.361167', 'B3', 251.50, 'Booked', 32);
 
 
 --
@@ -1435,6 +1503,8 @@ INSERT INTO public.ticket_booking VALUES (22, 23);
 INSERT INTO public.ticket_booking VALUES (23, 24);
 INSERT INTO public.ticket_booking VALUES (24, 25);
 INSERT INTO public.ticket_booking VALUES (25, 26);
+INSERT INTO public.ticket_booking VALUES (26, 27);
+INSERT INTO public.ticket_booking VALUES (27, 28);
 
 
 --
@@ -1494,6 +1564,8 @@ INSERT INTO public.train VALUES (76, 'Express Runner', 'EXPRESS', 'Express_Class
 INSERT INTO public.train VALUES (77, 'Padma Express - Shovan', 'SHOVAN', 'Shovan', 110, 'Intercity service Dhaka-Rajshahi - Shovan Class', '2025-07-09 00:45:16.760782');
 INSERT INTO public.train VALUES (78, 'Padma Express - S_Chair', 'S_CHAIR', 'S_Chair', 90, 'Intercity service Dhaka-Rajshahi - S_Chair Class', '2025-07-09 00:45:16.760782');
 INSERT INTO public.train VALUES (79, 'Suborno Express - Snigdha', 'SNIGDHA', 'Snigdha', 80, 'Premium service between Dhaka and Chittagong - Snigdha Class', '2025-07-09 01:23:41.179655');
+INSERT INTO public.train VALUES (80, 'Uiia Express', 'EXECUTIVE', 'Snigdha', 30, 'HellNo', '2025-07-19 01:15:39.697553');
+INSERT INTO public.train VALUES (81, 'Nalo Express', 'AC_CHAIR', 'AC_Chair', 20, 'Naloi', '2025-07-19 01:34:56.344261');
 
 
 --
@@ -1511,7 +1583,7 @@ SELECT pg_catalog.setval('public.admin_admin_id_seq', 23, true);
 -- Name: booking_booking_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.booking_booking_id_seq', 26, true);
+SELECT pg_catalog.setval('public.booking_booking_id_seq', 28, true);
 
 
 --
@@ -1565,7 +1637,7 @@ SELECT pg_catalog.setval('public.feedback_feedback_id_seq', 4, true);
 -- Name: login_history_login_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.login_history_login_id_seq', 69, true);
+SELECT pg_catalog.setval('public.login_history_login_id_seq', 78, true);
 
 
 --
@@ -1592,7 +1664,7 @@ SELECT pg_catalog.setval('public.passenger_passenger_id_seq', 91, true);
 -- Name: payment_payment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.payment_payment_id_seq', 30, true);
+SELECT pg_catalog.setval('public.payment_payment_id_seq', 32, true);
 
 
 --
@@ -1619,7 +1691,7 @@ SELECT pg_catalog.setval('public.route_station_route_station_id_seq', 3, true);
 -- Name: schedule_schedule_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.schedule_schedule_id_seq', 32, true);
+SELECT pg_catalog.setval('public.schedule_schedule_id_seq', 34, true);
 
 
 --
@@ -1628,7 +1700,7 @@ SELECT pg_catalog.setval('public.schedule_schedule_id_seq', 32, true);
 -- Name: seat_inventory_inventory_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.seat_inventory_inventory_id_seq', 99, true);
+SELECT pg_catalog.setval('public.seat_inventory_inventory_id_seq', 150, true);
 
 
 --
@@ -1655,7 +1727,7 @@ SELECT pg_catalog.setval('public.ticket_cancellation_cancellation_id_seq', 12, t
 -- Name: ticket_ticket_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.ticket_ticket_id_seq', 25, true);
+SELECT pg_catalog.setval('public.ticket_ticket_id_seq', 27, true);
 
 
 --
@@ -1664,7 +1736,7 @@ SELECT pg_catalog.setval('public.ticket_ticket_id_seq', 25, true);
 -- Name: train_train_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.train_train_id_seq', 79, true);
+SELECT pg_catalog.setval('public.train_train_id_seq', 81, true);
 
 
 --
@@ -2282,7 +2354,7 @@ ALTER TABLE ONLY public.ticket
     ADD CONSTRAINT ticket_schedule_id_seat_number_fkey FOREIGN KEY (schedule_id, seat_number) REFERENCES public.seat_inventory(schedule_id, seat_number);
 
 
--- Completed on 2025-07-19 00:37:04
+-- Completed on 2025-07-19 22:14:35
 
 --
 -- PostgreSQL database dump complete

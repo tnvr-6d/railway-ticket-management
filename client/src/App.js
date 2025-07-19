@@ -189,7 +189,7 @@ function App() {
         <div
           className={`text-base mt-1 ${isOccupied ? "" : "text-green-700"}`}
         >
-          {isPending ? "Pending" : isOccupied ? "Occupied" : `${seat.price}`}
+          {isPending ? "Pending" : isOccupied ? "Occupied" : `৳${seat.price}`}
         </div>
         <div
           className={`absolute bottom-0 left-0 right-0 h-1/3 ${shadeClass}`}
@@ -439,12 +439,12 @@ function App() {
                         <div className="mb-2 text-left">
                           {selectedSeats.map(seat => (
                             <div key={seat.seat_number}>
-                              <strong>Seat:</strong> {seat.seat_number} (Row: {seat.row_number}, Col: {seat.column_number}) - ${seat.price}
+                              <strong>Seat:</strong> {seat.seat_number} (Row: {seat.row_number}, Col: {seat.column_number}) - ৳{seat.price}
                             </div>
                           ))}
                         </div>
                         <p className="font-bold text-lg my-2">
-                          <strong>Total Price:</strong> ${selectedSeats.reduce((sum, seat) => sum + Number(seat.price), 0).toFixed(2)}
+                          <strong>Total Price:</strong> ৳{selectedSeats.reduce((sum, seat) => sum + Number(seat.price), 0).toFixed(2)}
                         </p>
                         <button
                           className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"

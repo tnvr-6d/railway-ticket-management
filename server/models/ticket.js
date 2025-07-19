@@ -269,6 +269,7 @@ const confirmCancellation = async (ticket_id, admin_id) => {
     }
 };
 const getAvailableSeats = async (schedule_id) => {
+    // For now, only filter by class_type. In the future, add coach_number to the WHERE clause for more granular filtering.
     const result = await pool.query(`
         SELECT 
             si.*,
@@ -283,6 +284,9 @@ const getAvailableSeats = async (schedule_id) => {
         JOIN route r ON s.route_id = r.route_id
         JOIN fare f ON si.coach_number = f.coach_number AND si.class_type = f.class_type
         WHERE si.schedule_id = $1
+
+        
+      
         ORDER BY si.coach_number, si.seat_number
     `, [schedule_id]);
 
