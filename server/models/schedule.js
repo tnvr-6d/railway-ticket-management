@@ -76,9 +76,17 @@ const searchSchedules = async (source, destination, departure_date, class_type) 
         WHERE st_from.station_name ILIKE $1
           AND st_to.station_name ILIKE $2
           AND (
-            (ars_from.arrival_time IS NULL AND ars_to.arrival_time IS NOT NULL)
-            OR (ars_from.arrival_time IS NOT NULL AND ars_to.arrival_time IS NULL)
-            OR (ars_from.arrival_time IS NOT NULL AND ars_to.arrival_time IS NOT NULL AND ars_from.arrival_time < ars_to.arrival_time)
+            (
+              ars_from.is_endpoint = 1 AND ars_to.is_endpoint = 1 AND src.station_name ILIKE $1 AND dest.station_name ILIKE $2
+            )
+            OR
+            (
+              (
+                (ars_from.arrival_time IS NULL AND ars_to.arrival_time IS NOT NULL)
+                OR (ars_from.arrival_time IS NOT NULL AND ars_to.arrival_time IS NULL)
+                OR (ars_from.arrival_time IS NOT NULL AND ars_to.arrival_time IS NOT NULL AND ars_from.arrival_time < ars_to.arrival_time)
+              )
+            )
           )
           AND s.departure_date = $3
           AND si.class_type = $4
