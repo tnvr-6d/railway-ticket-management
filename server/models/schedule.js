@@ -63,7 +63,15 @@ const searchSchedules = async (source, destination, departure_date, class_type) 
         JOIN station dest ON r.destination_station_id = dest.station_id
         JOIN seat_inventory si ON s.schedule_id = si.schedule_id
         JOIN class c ON si.class_type = c.class_type
-        WHERE src.station_name ILIKE $1
+        WHERE (
+            src.station_name ILIKE $1
+            OR EXISTS (
+                SELECT 1 FROM route_station rs2
+                JOIN station st2 ON rs2.station_id = st2.station_id
+                WHERE rs2.route_id = r.route_id
+                  AND st2.station_name ILIKE $1
+            )
+        )
           AND dest.station_name ILIKE $2
           AND s.departure_date = $3
           AND si.class_type = $4
