@@ -5,7 +5,7 @@
 -- Dumped from database version 17.5
 -- Dumped by pg_dump version 17.5
 
--- Started on 2025-07-20 16:45:56
+-- Started on 2025-07-20 22:40:43
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -841,6 +841,7 @@ INSERT INTO public.booking VALUES (47, 91, '2025-07-20 01:55:05.103867', 51, NUL
 INSERT INTO public.booking VALUES (48, 91, '2025-07-20 01:55:05.124164', 52, NULL);
 INSERT INTO public.booking VALUES (32, 91, '2025-07-20 00:19:50.043373', 36, 'nOno');
 INSERT INTO public.booking VALUES (49, 62, '2025-07-20 01:56:41.035965', 53, NULL);
+INSERT INTO public.booking VALUES (50, 91, '2025-07-20 21:54:34.297816', 54, NULL);
 
 
 --
@@ -1080,6 +1081,9 @@ INSERT INTO public.login_history VALUES (85, 91, '2025-07-20 01:27:20.578991', '
 INSERT INTO public.login_history VALUES (86, 91, '2025-07-20 01:42:30.340719', '::1', 'Chrome on Windows', true);
 INSERT INTO public.login_history VALUES (87, 91, '2025-07-20 01:55:56.071513', '::1', 'Chrome on Windows', true);
 INSERT INTO public.login_history VALUES (88, 62, '2025-07-20 01:56:23.448845', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (89, 91, '2025-07-20 20:09:59.530676', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (90, 91, '2025-07-20 21:48:49.068011', '::1', 'Chrome on Windows', true);
+INSERT INTO public.login_history VALUES (91, 91, '2025-07-20 22:03:02.178399', '::1', 'Chrome on Windows', true);
 
 
 --
@@ -1207,6 +1211,7 @@ INSERT INTO public.payment VALUES (50, 251.50, '2025-07-20 01:27:41.342141', 'TX
 INSERT INTO public.payment VALUES (51, 560.88, '2025-07-20 01:55:05.103867', 'TXN-1752954905105-91', 'Completed');
 INSERT INTO public.payment VALUES (52, 560.88, '2025-07-20 01:55:05.124164', 'TXN-1752954905124-91', 'Completed');
 INSERT INTO public.payment VALUES (53, 560.88, '2025-07-20 01:56:41.035965', 'TXN-1752955001036-62', 'Completed');
+INSERT INTO public.payment VALUES (54, 560.88, '2025-07-20 21:54:34.297816', 'TXN-1753026874298-91', 'Completed');
 
 
 --
@@ -1256,6 +1261,7 @@ INSERT INTO public.route VALUES (60, 85, 104, 672.45, 1080, '2025-07-09 00:45:16
 INSERT INTO public.route_station VALUES (1, 31, 80, '09:15:00', '09:20:00');
 INSERT INTO public.route_station VALUES (2, 32, 79, '01:30:00', '01:35:00');
 INSERT INTO public.route_station VALUES (3, 33, 78, '09:45:00', '09:50:00');
+INSERT INTO public.route_station VALUES (4, 39, 88, '11:00:00', '11:10:00');
 
 
 --
@@ -1393,7 +1399,6 @@ INSERT INTO public.seat_inventory VALUES (86, 31, 'SNG-9', 'SNIGDHA', 'Snigdha',
 INSERT INTO public.seat_inventory VALUES (87, 31, 'SNG-10', 'SNIGDHA', 'Snigdha', true, 3, 2);
 INSERT INTO public.seat_inventory VALUES (88, 31, 'SNG-11', 'SNIGDHA', 'Snigdha', true, 3, 3);
 INSERT INTO public.seat_inventory VALUES (89, 31, 'SNG-12', 'SNIGDHA', 'Snigdha', true, 3, 4);
-INSERT INTO public.seat_inventory VALUES (92, 32, 'SNG-A3', 'SNIGDHA', 'Snigdha', true, 1, 3);
 INSERT INTO public.seat_inventory VALUES (93, 32, 'SNG-B1', 'SNIGDHA', 'Snigdha', true, 1, 4);
 INSERT INTO public.seat_inventory VALUES (99, 32, 'SNG-D2', 'SNIGDHA', 'Snigdha', true, 3, 2);
 INSERT INTO public.seat_inventory VALUES (97, 32, 'SNG-C2', 'SNIGDHA', 'Snigdha', false, 2, 4);
@@ -1401,6 +1406,7 @@ INSERT INTO public.seat_inventory VALUES (96, 32, 'SNG-C1', 'SNIGDHA', 'Snigdha'
 INSERT INTO public.seat_inventory VALUES (94, 32, 'SNG-B2', 'SNIGDHA', 'Snigdha', false, 2, 1);
 INSERT INTO public.seat_inventory VALUES (98, 32, 'SNG-D1', 'SNIGDHA', 'Snigdha', false, 3, 1);
 INSERT INTO public.seat_inventory VALUES (91, 32, 'SNG-A2', 'SNIGDHA', 'Snigdha', true, 1, 2);
+INSERT INTO public.seat_inventory VALUES (92, 32, 'SNG-A3', 'SNIGDHA', 'Snigdha', false, 1, 3);
 INSERT INTO public.seat_inventory VALUES (90, 32, 'SNG-A1', 'SNIGDHA', 'Snigdha', true, 1, 1);
 INSERT INTO public.seat_inventory VALUES (95, 32, 'SNG-B3', 'SNIGDHA', 'Snigdha', true, 2, 2);
 INSERT INTO public.seat_inventory VALUES (80, 31, 'SNG-3', 'SNIGDHA', 'Snigdha', false, 1, 3);
@@ -1496,6 +1502,7 @@ INSERT INTO public.station VALUES (101, 'Narail Railway Station', 'Narail', '+88
 INSERT INTO public.station VALUES (102, 'Gopalganj Railway Station', 'Gopalganj', '+880-661-54321', '2025-07-09 00:45:16.760782');
 INSERT INTO public.station VALUES (103, 'Faridpur Railway Station', 'Faridpur', '+880-631-43210', '2025-07-09 00:45:16.760782');
 INSERT INTO public.station VALUES (104, 'Madaripur Railway Station', 'Madaripur', '+880-641-32109', '2025-07-09 00:45:16.760782');
+INSERT INTO public.station VALUES (105, 'Eliotganj Railway Station', 'Eliotganj,Dhaka', '+08802696969', '2025-07-20 10:39:21.86382');
 
 
 --
@@ -1549,6 +1556,7 @@ INSERT INTO public.ticket VALUES (46, 6, 91, 32, '2025-07-20 01:55:05.103867', '
 INSERT INTO public.ticket VALUES (47, 6, 91, 32, '2025-07-20 01:55:05.124164', 'SNG-D1', 560.88, 'Booked', 52);
 INSERT INTO public.ticket VALUES (31, 6, 91, 32, '2025-07-20 00:19:50.043373', 'SNG-C1', 560.88, 'Cancelled', 36);
 INSERT INTO public.ticket VALUES (48, 6, 62, 32, '2025-07-20 01:56:41.035965', 'SNG-C1', 560.88, 'Booked', 53);
+INSERT INTO public.ticket VALUES (49, 6, 91, 32, '2025-07-20 21:54:34.297816', 'SNG-A3', 560.88, 'Booked', 54);
 
 
 --
@@ -1602,6 +1610,7 @@ INSERT INTO public.ticket_booking VALUES (45, 46);
 INSERT INTO public.ticket_booking VALUES (46, 47);
 INSERT INTO public.ticket_booking VALUES (47, 48);
 INSERT INTO public.ticket_booking VALUES (48, 49);
+INSERT INTO public.ticket_booking VALUES (49, 50);
 
 
 --
@@ -1681,7 +1690,7 @@ SELECT pg_catalog.setval('public.admin_admin_id_seq', 23, true);
 -- Name: booking_booking_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.booking_booking_id_seq', 49, true);
+SELECT pg_catalog.setval('public.booking_booking_id_seq', 50, true);
 
 
 --
@@ -1735,7 +1744,7 @@ SELECT pg_catalog.setval('public.feedback_feedback_id_seq', 5, true);
 -- Name: login_history_login_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.login_history_login_id_seq', 88, true);
+SELECT pg_catalog.setval('public.login_history_login_id_seq', 91, true);
 
 
 --
@@ -1762,7 +1771,7 @@ SELECT pg_catalog.setval('public.passenger_passenger_id_seq', 91, true);
 -- Name: payment_payment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.payment_payment_id_seq', 53, true);
+SELECT pg_catalog.setval('public.payment_payment_id_seq', 54, true);
 
 
 --
@@ -1825,7 +1834,7 @@ SELECT pg_catalog.setval('public.ticket_cancellation_cancellation_id_seq', 13, t
 -- Name: ticket_ticket_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.ticket_ticket_id_seq', 48, true);
+SELECT pg_catalog.setval('public.ticket_ticket_id_seq', 49, true);
 
 
 --
@@ -2452,7 +2461,7 @@ ALTER TABLE ONLY public.ticket
     ADD CONSTRAINT ticket_schedule_id_seat_number_fkey FOREIGN KEY (schedule_id, seat_number) REFERENCES public.seat_inventory(schedule_id, seat_number);
 
 
--- Completed on 2025-07-20 16:45:56
+-- Completed on 2025-07-20 22:40:43
 
 --
 -- PostgreSQL database dump complete

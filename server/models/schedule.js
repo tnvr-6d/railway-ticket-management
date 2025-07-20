@@ -30,8 +30,14 @@ const getAllSchedules = async () => {
 };
 
 const searchSchedules = async (source, destination, departure_date, class_type) => {
-    
     const query = `
+        WITH all_route_stations AS (
+            SELECT route_id, station_id, arrival_time, 0 as is_endpoint FROM route_station
+            UNION ALL
+            SELECT route_id, source_station_id as station_id, NULL as arrival_time, 1 as is_endpoint FROM route
+            UNION ALL
+            SELECT route_id, destination_station_id as station_id, NULL as arrival_time, 1 as is_endpoint FROM route
+        )
         SELECT DISTINCT
             s.schedule_id, s.departure_time, s.arrival_time, s.departure_date, s.status,
             t.train_name, t.coach_number,
@@ -63,16 +69,17 @@ const searchSchedules = async (source, destination, departure_date, class_type) 
         JOIN station dest ON r.destination_station_id = dest.station_id
         JOIN seat_inventory si ON s.schedule_id = si.schedule_id
         JOIN class c ON si.class_type = c.class_type
-        WHERE (
-            src.station_name ILIKE $1
-            OR EXISTS (
-                SELECT 1 FROM route_station rs2
-                JOIN station st2 ON rs2.station_id = st2.station_id
-                WHERE rs2.route_id = r.route_id
-                  AND st2.station_name ILIKE $1
-            )
-        )
-          AND dest.station_name ILIKE $2
+        JOIN all_route_stations ars_from ON ars_from.route_id = r.route_id
+        JOIN all_route_stations ars_to ON ars_to.route_id = r.route_id
+        JOIN station st_from ON ars_from.station_id = st_from.station_id
+        JOIN station st_to ON ars_to.station_id = st_to.station_id
+        WHERE st_from.station_name ILIKE $1
+          AND st_to.station_name ILIKE $2
+          AND (
+            (ars_from.arrival_time IS NULL AND ars_to.arrival_time IS NOT NULL)
+            OR (ars_from.arrival_time IS NOT NULL AND ars_to.arrival_time IS NULL)
+            OR (ars_from.arrival_time IS NOT NULL AND ars_to.arrival_time IS NOT NULL AND ars_from.arrival_time < ars_to.arrival_time)
+          )
           AND s.departure_date = $3
           AND si.class_type = $4
         ORDER BY
