@@ -23,6 +23,7 @@ import {
   getAllFeedback,
   updateFeedbackStatus
 } from '../api/api';
+import TrainLocationUploader from './TrainLocationUploader';
 
 
 function AdminDashboard({ adminUser }) {
@@ -49,6 +50,7 @@ function AdminDashboard({ adminUser }) {
     const [feedbackLoading, setFeedbackLoading] = useState(false);
     const [feedbackError, setFeedbackError] = useState('');
     const [feedbackStatusUpdating, setFeedbackStatusUpdating] = useState(null);
+    const [showUploader, setShowUploader] = useState(false);
 
     // Form states
     const [scheduleForm, setScheduleForm] = useState({
@@ -1084,7 +1086,29 @@ function AdminDashboard({ adminUser }) {
                 {activeTab === 'trains' && renderTrainsTab()}
                 {activeTab === 'seats' && renderSeatInventoryTab()}
                 {activeTab === 'feedback' && renderFeedbackTab()}
+                <div className="mb-4 flex justify-end">
+                    <button
+                        className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg"
+                        onClick={() => setShowUploader(true)}
+                    >
+                        🚆 Open Train Location Uploader
+                    </button>
+                </div>
             </div>
+            {showUploader && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl relative">
+                        <button
+                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl"
+                            onClick={() => setShowUploader(false)}
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
+                        <TrainLocationUploader />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

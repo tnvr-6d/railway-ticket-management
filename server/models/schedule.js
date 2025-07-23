@@ -39,7 +39,9 @@ const searchSchedules = async (source, destination, departure_date, class_type) 
             SELECT route_id, destination_station_id as station_id, NULL as arrival_time, 1 as is_endpoint FROM route
         )
         SELECT DISTINCT
-            s.schedule_id, s.departure_time, s.arrival_time, s.departure_date, s.status,
+            s.schedule_id,
+            s.train_id,
+            s.departure_time, s.arrival_time, s.departure_date, s.status,
             t.train_name, t.coach_number,
             r.distance, r.duration,
             src.station_name AS source,

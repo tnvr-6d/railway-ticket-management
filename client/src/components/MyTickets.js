@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getMyTickets, requestCancellation } from '../api/api';
+import { getMyTickets, requestCancellation, getTrainLocation } from '../api/api';
 import { submitFeedback } from '../api/api';
 import { generateTicketPDF } from '../utils/pdfGenerator';
+import TrainLocationMap from './TrainLocationMap';
 
 function MyTickets({ passengerId }) {
   const [tickets, setTickets] = useState([]);
@@ -19,6 +20,9 @@ function MyTickets({ passengerId }) {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState('');
   const [feedbackSuccess, setFeedbackSuccess] = useState('');
+
+  const [showMapForTicket, setShowMapForTicket] = useState({});
+  const [trainLocations, setTrainLocations] = useState({});
 
   const fetchTickets = useCallback(async () => {
     if (passengerId) {
@@ -38,6 +42,28 @@ function MyTickets({ passengerId }) {
   useEffect(() => {
     fetchTickets();
   }, [fetchTickets]);
+
+  // Fetch train location for a ticket
+  const fetchTrainLocation = async (ticket) => {
+    try {
+      const loc = await getTrainLocation(ticket.train_id || ticket.trainId || ticket.train_id);
+      setTrainLocations((prev) => ({ ...prev, [ticket.ticket_id]: loc }));
+    } catch (err) {
+      setTrainLocations((prev) => ({ ...prev, [ticket.ticket_id]: null }));
+    }
+  };
+
+  // Poll for location updates every 15s for visible maps
+  useEffect(() => {
+    const visibleTicketIds = Object.keys(showMapForTicket).filter((id) => showMapForTicket[id]);
+    if (visibleTicketIds.length === 0) return;
+    const interval = setInterval(() => {
+      tickets.forEach((ticket) => {
+        if (showMapForTicket[ticket.ticket_id]) fetchTrainLocation(ticket);
+      });
+    }, 15000);
+    return () => clearInterval(interval);
+  }, [showMapForTicket, tickets]);
 
   const handleCancel = async (ticket) => {
     const reason = prompt("Please provide a reason for cancellation:");
@@ -260,6 +286,24 @@ function MyTickets({ passengerId }) {
                           )}
                         </>
                       }
+                      <button
+                        className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg mb-2"
+                        onClick={async () => {
+                          setShowMapForTicket((prev) => ({ ...prev, [ticket.ticket_id]: !prev[ticket.ticket_id] }));
+                          if (!showMapForTicket[ticket.ticket_id]) await fetchTrainLocation(ticket);
+                        }}
+                      >
+                        {showMapForTicket[ticket.ticket_id] ? 'Hide Live Train Location' : 'Show Live Train Location'}
+                      </button>
+                      {showMapForTicket[ticket.ticket_id] && (
+                        <div className="my-4">
+                          <TrainLocationMap
+                            latitude={trainLocations[ticket.ticket_id]?.latitude}
+                            longitude={trainLocations[ticket.ticket_id]?.longitude}
+                            trainName={ticket.train_name}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (

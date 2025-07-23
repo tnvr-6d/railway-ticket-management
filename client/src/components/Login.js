@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { loginPassenger, loginAdmin } from "../api/api";
 
-function Login({ onLogin, onAdminLogin }) {
+function Login({ onLogin, onAdminLogin, onlyPassenger, onlyAdmin }) {
   const [loginType, setLoginType] = useState('passenger');
   
   const [passengerEmail, setPassengerEmail] = useState("");
@@ -51,11 +51,12 @@ function Login({ onLogin, onAdminLogin }) {
 
   return (
     <>
-      <header className="relative text-center py-20 px-6 bg-gradient-to-br from-indigo-700 via-purple-600 to-blue-600 text-white">
-        <h1 className="text-5xl font-extrabold mb-4">Railway Ticket System</h1>
-        <p className="text-xl text-indigo-200 max-w-2xl mx-auto">Book your train tickets with ease and comfort, from anywhere in Bangladesh.</p>
-      </header>
-
+      {(!onlyAdmin && !onlyPassenger) && (
+        <header className="relative text-center py-20 px-6 bg-gradient-to-br from-indigo-700 via-purple-600 to-blue-600 text-white">
+          <h1 className="text-5xl font-extrabold mb-4">Railway Ticket System</h1>
+          <p className="text-xl text-indigo-200 max-w-2xl mx-auto">Book your train tickets with ease and comfort, from anywhere in Bangladesh.</p>
+        </header>
+      )}
       <main className="py-12 px-4">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-start">
           <div className="bg-white p-8 rounded-2xl shadow-xl">
@@ -102,19 +103,20 @@ function Login({ onLogin, onAdminLogin }) {
               </form>
             )}
           </div>
+          {/* Features panel */}
           <div className="space-y-6 pt-4">
-              <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
-                  <div className="text-3xl">🎫</div>
-                  <div><h3 className="font-bold text-lg text-gray-800">Easy Booking</h3><p className="text-gray-600">Book train tickets in just a few clicks.</p></div>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
-                  <div className="text-3xl">🔒</div>
-                  <div><h3 className="font-bold text-lg text-gray-800">Secure & Safe</h3><p className="text-gray-600">Your data is protected with industry-standard security.</p></div>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
-                  <div className="text-3xl">📞</div>
-                  <div><h3 className="font-bold text-lg text-gray-800">24/7 Support</h3><p className="text-gray-600">Our customer service team is always ready to help.</p></div>
-              </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
+              <div className="text-3xl">🎫</div>
+              <div><h3 className="font-bold text-lg text-gray-800">Easy Booking</h3><p className="text-gray-600">Book train tickets in just a few clicks.</p></div>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
+              <div className="text-3xl">🔒</div>
+              <div><h3 className="font-bold text-lg text-gray-800">Secure & Safe</h3><p className="text-gray-600">Your data is protected with industry-standard security.</p></div>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
+              <div className="text-3xl">📞</div>
+              <div><h3 className="font-bold text-lg text-gray-800">24/7 Support</h3><p className="text-gray-600">Our customer service team is always ready to help.</p></div>
+            </div>
           </div>
         </div>
       </main>

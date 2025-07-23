@@ -618,4 +618,32 @@ export const getPassengerById = async (passengerId) => {
     console.error("❌ getPassengerById() failed:", err);
     throw err;
   }
+};
+
+// Dummy payment API (for extensibility, not used in modal)
+export const dummyPayment = async (amount) => {
+  // Simulate a network call delay
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ success: true, message: 'Payment successful (dummy)' });
+    }, 1200);
+  });
+};
+
+// Get train location
+export const getTrainLocation = async (train_id) => {
+  const res = await fetch(`${API_BASE}/api/train/location/${train_id}`);
+  if (!res.ok) throw new Error('No location found');
+  return await res.json();
+};
+
+// Update train location (for uploader)
+export const updateTrainLocation = async (train_id, latitude, longitude) => {
+  const res = await fetch(`${API_BASE}/api/train/location`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ train_id, latitude, longitude }),
+  });
+  if (!res.ok) throw new Error('Failed to update location');
+  return await res.json();
 };  

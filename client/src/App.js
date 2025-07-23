@@ -13,6 +13,9 @@ import NotificationsPage from "./components/NotificationsPage";
 import PassengerDashboard from "./components/PassengerDashboard";
 import { getSeats, buyTicket, getPassengerById } from "./api/api";
 import AdminProfileModal from "./components/AdminProfileModal";
+import DummyPaymentModal from "./components/DummyPaymentModal";
+import ChatBot from "./components/ChatBot";
+import Creators from "./components/Creators";
 
 
 function App() {
@@ -30,6 +33,8 @@ function App() {
   const [showPassengerDashboard, setShowPassengerDashboard] = useState(false);
   const [dashboardPassenger, setDashboardPassenger] = useState(null);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
 
   useEffect(() => {
     if (selectedSchedule) {
@@ -199,6 +204,9 @@ function App() {
   };
 
   if (!passenger && !adminUser) {
+    if (currentView === 'creators') {
+      return <Creators onBack={() => setCurrentView('home')} />;
+    }
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         {showSignup ? (
@@ -229,7 +237,7 @@ function App() {
             </p>
           )}
         </div>
-        <Footer />
+        <Footer onCreatorsClick={() => setCurrentView('creators')} />
       </div>
     );
   }
@@ -348,9 +356,8 @@ function App() {
       <main className="flex-grow">
         {currentView === "home" && (
           <>
-            {/* Enhanced hero section */}
+            {/* Original hero section */}
             <div className="hero-section relative h-96 flex flex-col justify-center items-center">
-              {/* Hero content positioned higher */}
               <div className="hero-content text-center px-4 mb-4">
                 <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 leading-tight">
                   Find Your Next Journey
@@ -371,12 +378,10 @@ function App() {
                 </div>
               </div>
             </div>
-            
             {/* Search form positioned below the hero section */}
             <div className="relative z-10 w-full max-w-6xl mx-auto px-4">
               <SearchForm onResults={handleSearchResults} />
             </div>
-            
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
               <div className="mt-4">
                 <h2 className="text-3xl font-bold text-gray-800 mb-6">
@@ -388,7 +393,6 @@ function App() {
                 />
               </div>
             </div>
-
             {selectedSchedule && (
               <div className="mt-12 bg-white rounded-xl shadow-lg p-8 max-w-7xl mx-auto">
                 <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">
@@ -448,10 +452,10 @@ function App() {
                         </p>
                         <button
                           className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg"
-                          onClick={handleBuy}
-                          disabled={bookingLoading}
+                          onClick={() => setShowPaymentModal(true)}
+                          disabled={bookingLoading || paymentProcessing}
                         >
-                          {bookingLoading ? "Processing..." : `💳 Purchase Ticket${selectedSeats.length > 1 ? 's' : ''}`}
+                          {bookingLoading || paymentProcessing ? "Processing..." : `💳 Purchase Ticket${selectedSeats.length > 1 ? 's' : ''}`}
                         </button>
                       </div>
                     )}
@@ -473,12 +477,25 @@ function App() {
         )}
 
         {currentView === "contact" && <Contact />}
+        {currentView === "creators" && <Creators onBack={() => setCurrentView('home')} />}
       </main>
 
-      <Footer />
+      <Footer onCreatorsClick={() => handleViewChange('creators')} />
       {showPassengerDashboard && (
         <PassengerDashboard passenger={dashboardPassenger} onClose={handleClosePassengerDashboard} />
       )}
+      <DummyPaymentModal
+        open={showPaymentModal}
+        amount={selectedSeats.reduce((sum, seat) => sum + Number(seat.price), 0).toFixed(2)}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={async () => {
+          setPaymentProcessing(true);
+          setShowPaymentModal(false);
+          await handleBuy();
+          setPaymentProcessing(false);
+        }}
+      />
+      <ChatBot />
     </div>
   );
 }

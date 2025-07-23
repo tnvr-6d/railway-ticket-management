@@ -1,12 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import FareLabel from "./FareLabel";
+import { getTrainLocation } from '../api/api';
+import TrainLocationMap from './TrainLocationMap';
 
 function ScheduleList({ schedules, onSelectSchedule }) {
   const [expandedScheduleId, setExpandedScheduleId] = useState(null);
+  const [showMapForTrain, setShowMapForTrain] = useState(null);
+  const [trainLocations, setTrainLocations] = useState({});
 
   const toggleRouteStations = (scheduleId) => {
     setExpandedScheduleId(expandedScheduleId === scheduleId ? null : scheduleId);
   };
+
+  // Fetch location for a specific train
+  const fetchLocation = async (train_id) => {
+    if (!train_id) {
+      console.warn('No train_id provided to fetchLocation!');
+      return;
+    }
+    try {
+      const loc = await getTrainLocation(train_id);
+      setTrainLocations((prev) => ({ ...prev, [train_id]: loc }));
+      console.log('Fetched location for train_id', train_id, loc);
+    } catch {
+      setTrainLocations((prev) => ({ ...prev, [train_id]: null }));
+      console.warn('Failed to fetch location for train_id', train_id);
+    }
+  };
+
+  // Poll for updates every 15s when map is open
+  useEffect(() => {
+    if (!showMapForTrain) return;
+    fetchLocation(showMapForTrain);
+    const interval = setInterval(() => fetchLocation(showMapForTrain), 15000);
+    return () => clearInterval(interval);
+  }, [showMapForTrain]);
 
   if (!schedules || schedules.length === 0) {
     return (
@@ -21,6 +49,8 @@ function ScheduleList({ schedules, onSelectSchedule }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {schedules.map((schedule, index) => {
+        // Debug: print schedule object
+        console.log('Schedule:', schedule);
         const isExpanded = expandedScheduleId === schedule.schedule_id;
         const routeString = [
           schedule.source,
@@ -49,9 +79,6 @@ function ScheduleList({ schedules, onSelectSchedule }) {
                 <span>🕒 {schedule.duration} min</span>
                 <span>📏 {Number(schedule.distance).toFixed(2)} km</span>
               </div>
-              {/* <div className="text-sm text-gray-700 font-semibold mb-1">
-                🪑 {schedule.available_seats} / {schedule.total_seats} seats available
-              </div> */}
               {(() => {
                 const available = schedule.available_seats;
                 const total = schedule.total_seats;
@@ -91,6 +118,29 @@ function ScheduleList({ schedules, onSelectSchedule }) {
               >
                 🪑 Select Seats
               </button>
+            </div>
+            <div className="flex flex-col gap-2 mt-2">
+              <button
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
+                onClick={async () => {
+                  if (showMapForTrain === schedule.train_id) setShowMapForTrain(null);
+                  else {
+                    setShowMapForTrain(schedule.train_id);
+                    await fetchLocation(schedule.train_id);
+                  }
+                }}
+              >
+                {showMapForTrain === schedule.train_id ? 'Hide Live Location' : 'Show Live Location'}
+              </button>
+              {showMapForTrain === schedule.train_id && (
+                <div className="my-4">
+                  <TrainLocationMap
+                    latitude={trainLocations[schedule.train_id]?.latitude}
+                    longitude={trainLocations[schedule.train_id]?.longitude}
+                    trainName={schedule.train_name}
+                  />
+                </div>
+              )}
             </div>
           </div>
         );
