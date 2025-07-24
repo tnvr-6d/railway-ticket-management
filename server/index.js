@@ -17,6 +17,9 @@ const passengerRoutes = require('./routes/passenger');
 const adminRoutes = require('./routes/admin');
 const classRoutes = require('./routes/classes');
 const stationRoutes = require('./routes/station'); 
+const notificationRoutes = require('./routes/notification');
+const feedbackRoutes = require('./routes/feedback');
+const chatRoutes = require('./routes/chat');
 
 // Unified API route prefix
 app.use('/api/trains', trainRoutes);
@@ -28,6 +31,10 @@ app.use('/api/passenger', passengerRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/classes', classRoutes);  
 app.use('/api/stations', stationRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/train', trainRoutes);
 
 // Default 404 for unmatched API routes
 app.use('/api', (req, res) => {

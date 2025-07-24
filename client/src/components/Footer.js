@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Footer() {
+function Footer({ onCreatorsClick }) {
   return (
     <footer className="bg-gray-800 text-gray-300 mt-auto">
       {/* Reduced vertical padding from py-8 to py-6 */}
@@ -12,6 +12,9 @@ function Footer() {
         <div>
           <h4 className="font-bold text-lg text-white mb-2">Quick Links</h4>
           <p className="text-sm">Book Tickets • Cancel Tickets • Customer Support • Terms & Conditions</p>
+          <p className="text-sm mt-2">
+            <a href="#" onClick={e => { e.preventDefault(); onCreatorsClick && onCreatorsClick(); }} className="text-blue-400 hover:underline" id="creators-link">Creators</a>
+          </p>
         </div>
         <div>
           <h4 className="font-bold text-lg text-white mb-2">Contact Us</h4>
