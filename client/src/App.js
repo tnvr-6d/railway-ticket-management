@@ -35,13 +35,28 @@ function App() {
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [selectedCoach, setSelectedCoach] = useState("");
+  const [coachList, setCoachList] = useState([]);
 
   useEffect(() => {
     if (selectedSchedule) {
       setLoading(true);
       setSeats({});
+      setSelectedCoach("");
+      setCoachList([]);
       getSeats(selectedSchedule.schedule_id)
         .then((seatsData) => {
+          // Extract unique coach numbers for the selected class
+          const filteredSeats = seatsData.filter(
+            (seat) => seat.class_type === selectedSchedule.class_type
+          );
+          const uniqueCoaches = [
+            ...new Set(filteredSeats.map((seat) => seat.coach_number)),
+          ];
+          setCoachList(uniqueCoaches);
+          setSelectedCoach(uniqueCoaches[0] || "");
+
+          // Group seats by row (all seats, not just filtered)
           const groupedSeats = seatsData.reduce((acc, seat) => {
             const row = seat.row_number;
             if (!acc[row]) {
@@ -398,6 +413,41 @@ function App() {
                 <h3 className="text-2xl font-bold text-center text-gray-800 mb-6">
                   Choose Your Seat for {selectedSchedule.train_name}
                 </h3>
+                {/* Coach Dropdown */}
+                {coachList.length > 0 && (
+                  <div className="mb-6 flex flex-col items-center">
+                    <label htmlFor="coach-select" className="font-semibold mb-2">Select Coach:</label>
+                    <select
+                      id="coach-select"
+                      className="form-input px-4 py-2 rounded-lg border border-gray-300 text-lg"
+                      value={selectedCoach}
+                      onChange={e => setSelectedCoach(e.target.value)}
+                    >
+                      {coachList.map(coach => (
+                        <option key={coach} value={coach}>{coach}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {/* Seat Count for selected coach/class */}
+                {selectedCoach && (() => {
+                  // Flatten all seats for selected coach and class
+                  const allSeats = Object.values(seats).flat().filter(
+                    seat => seat.coach_number === selectedCoach && seat.class_type === selectedSchedule.class_type
+                  );
+                  const available = allSeats.filter(seat => seat.is_available).length;
+                  const total = allSeats.length;
+                  let badgeColor = "bg-green-100 text-green-800 border-green-300";
+                  const percent = total > 0 ? available / total : 0;
+                  if (percent <= 0.2) badgeColor = "bg-red-100 text-red-700 border-red-300";
+                  else if (percent <= 0.5) badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-300";
+                  return (
+                    <div className={`flex items-center justify-center gap-2 my-2 px-3 py-2 rounded-full border font-bold text-base shadow-sm w-fit mx-auto ${badgeColor}`} aria-label={`Seats available: ${available} out of ${total}`}>
+                      <span className="text-lg font-extrabold">{available}</span>
+                      <span className="text-gray-600 font-medium text-base">/ {total} seats available</span>
+                    </div>
+                  );
+                })()}
                 {loading ? (
                   <div className="text-center text-gray-500">
                     Loading seats...
@@ -405,17 +455,21 @@ function App() {
                 ) : (
                   <>
                     <div className="space-y-4 max-w-5xl mx-auto">
+                      {/* Only show seats for selected coach and class */}
                       {Object.keys(seats)
                         .sort((a, b) => parseInt(a) - parseInt(b))
                         .map((rowNumber) => {
+                          // Only show seats for selected coach and class
+                          const filteredRow = (seats[rowNumber] || []).filter(
+                            seat => seat.coach_number === selectedCoach && seat.class_type === selectedSchedule.class_type
+                          );
+                          if (filteredRow.length === 0) return null;
                           const fullRow = Array(4).fill(null);
-                          seats[rowNumber].forEach((seat) => {
+                          filteredRow.forEach((seat) => {
                             if (seat.column_number >= 1 && seat.column_number <= 4) {
                               fullRow[seat.column_number - 1] = seat;
                             }
                           });
-
-                          // Render seats with a corridor (gap) between 2nd and 3rd columns only
                           return (
                             <div key={rowNumber} className="flex justify-center items-center mb-6">
                               {/* 1st and 2nd seats with a slight gap */}
