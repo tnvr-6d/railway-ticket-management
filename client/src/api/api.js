@@ -278,6 +278,21 @@ export const getUnreadNotificationCount = async (passengerId) => {
   }
 };
 
+export const sendNotification = async (notificationData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/notifications`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(notificationData),
+    });
+    if (!res.ok) throw new Error("Failed to send notification");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ sendNotification() failed:", err);
+    throw err;
+  }
+};
+
 // ===== ADMIN API FUNCTIONS =====
 
 // Schedule Management
@@ -466,7 +481,7 @@ export const adminGetAllClasses = async () => {
 
 export const adminGetAllCoaches = async () => {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/coaches`);
+    const res = await fetch(`${API_BASE}/api/coaches`);
     if (!res.ok) throw new Error("Failed to load coaches");
     return await res.json();
   } catch (err) {
@@ -512,6 +527,24 @@ export const adminAddSeatToSchedule = async (scheduleId, seatData) => {
     return await res.json();
   } catch (err) {
     console.error("❌ adminAddSeatToSchedule() failed:", err);
+    throw err;
+  }
+};
+
+export const adminBulkAddSeatsToSchedule = async (scheduleId, bulkSeatData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/schedules/${scheduleId}/seats/bulk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bulkSeatData),
+    });
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Failed to add bulk seats");
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("❌ adminBulkAddSeatsToSchedule() failed:", err);
     throw err;
   }
 };
@@ -646,4 +679,533 @@ export const updateTrainLocation = async (train_id, latitude, longitude) => {
   });
   if (!res.ok) throw new Error('Failed to update location');
   return await res.json();
+};
+
+// ===== COACH API FUNCTIONS =====
+export const getAllCoaches = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/coaches`);
+    if (!res.ok) throw new Error("Failed to load coaches");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getAllCoaches() failed:", err);
+    return [];
+  }
+};
+
+export const getCoachById = async (coachId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/coaches/${coachId}`);
+    if (!res.ok) throw new Error("Failed to load coach");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getCoachById() failed:", err);
+    throw err;
+  }
+};
+
+export const createCoach = async (coachData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/coaches`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(coachData),
+    });
+    if (!res.ok) throw new Error("Failed to create coach");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ createCoach() failed:", err);
+    throw err;
+  }
+};
+
+export const updateCoach = async (coachId, coachData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/coaches/${coachId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(coachData),
+    });
+    if (!res.ok) throw new Error("Failed to update coach");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ updateCoach() failed:", err);
+    throw err;
+  }
+};
+
+export const deleteCoach = async (coachId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/coaches/${coachId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete coach");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ deleteCoach() failed:", err);
+    throw err;
+  }
+};
+
+export const getCoachesByClass = async (classId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/coaches/class/${classId}`);
+    if (!res.ok) throw new Error("Failed to load coaches by class");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getCoachesByClass() failed:", err);
+    return [];
+  }
+};
+
+// ===== TRAIN COACH API FUNCTIONS =====
+export const getTrainCoaches = async (trainId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/train-coaches/train/${trainId}`);
+    if (!res.ok) throw new Error("Failed to load train coaches");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getTrainCoaches() failed:", err);
+    return [];
+  }
+};
+
+export const getTrainComposition = async (trainId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/train-coaches/composition/${trainId}`);
+    if (!res.ok) throw new Error("Failed to load train composition");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getTrainComposition() failed:", err);
+    return [];
+  }
+};
+
+export const assignCoachToTrain = async (trainId, coachData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/train-coaches/train/${trainId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(coachData),
+    });
+    if (!res.ok) throw new Error("Failed to assign coach to train");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ assignCoachToTrain() failed:", err);
+    throw err;
+  }
+};
+
+export const updateCoachOrder = async (trainCoachId, coachOrder) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/train-coaches/${trainCoachId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coach_order: coachOrder }),
+    });
+    if (!res.ok) throw new Error("Failed to update coach order");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ updateCoachOrder() failed:", err);
+    throw err;
+  }
+};
+
+export const removeCoachFromTrain = async (trainCoachId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/train-coaches/${trainCoachId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to remove coach from train");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ removeCoachFromTrain() failed:", err);
+    throw err;
+  }
+};
+
+// ===== ROUTE API FUNCTIONS =====
+export const getAllRoutes = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes`);
+    if (!res.ok) throw new Error("Failed to load routes");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getAllRoutes() failed:", err);
+    return [];
+  }
+};
+
+export const getRouteById = async (routeId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes/${routeId}`);
+    if (!res.ok) throw new Error("Failed to load route");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getRouteById() failed:", err);
+    throw err;
+  }
+};
+
+export const createRoute = async (routeData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(routeData),
+    });
+    if (!res.ok) throw new Error("Failed to create route");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ createRoute() failed:", err);
+    throw err;
+  }
+};
+
+export const updateRoute = async (routeId, routeData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes/${routeId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(routeData),
+    });
+    if (!res.ok) throw new Error("Failed to update route");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ updateRoute() failed:", err);
+    throw err;
+  }
+};
+
+export const deleteRoute = async (routeId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes/${routeId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete route");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ deleteRoute() failed:", err);
+    throw err;
+  }
+};
+
+export const getRouteStations = async (routeId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes/${routeId}/stations`);
+    if (!res.ok) throw new Error("Failed to load route stations");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getRouteStations() failed:", err);
+    return [];
+  }
+};
+
+export const addStationToRoute = async (routeId, stationData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes/${routeId}/stations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(stationData),
+    });
+    if (!res.ok) throw new Error("Failed to add station to route");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ addStationToRoute() failed:", err);
+    throw err;
+  }
+};
+
+export const removeStationFromRoute = async (routeStationId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/routes/stations/${routeStationId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to remove station from route");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ removeStationFromRoute() failed:", err);
+    throw err;
+  }
+};
+
+// ===== PAYMENT API FUNCTIONS =====
+export const createPayment = async (paymentData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/payments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(paymentData),
+    });
+    if (!res.ok) throw new Error("Failed to create payment");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ createPayment() failed:", err);
+    throw err;
+  }
+};
+
+export const getPaymentById = async (paymentId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/payments/${paymentId}`);
+    if (!res.ok) throw new Error("Failed to load payment");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getPaymentById() failed:", err);
+    throw err;
+  }
+};
+
+export const updatePaymentStatus = async (paymentId, status) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/payments/${paymentId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error("Failed to update payment status");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ updatePaymentStatus() failed:", err);
+    throw err;
+  }
+};
+
+export const getPaymentsByPassenger = async (passengerId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/payments/passenger/${passengerId}`);
+    if (!res.ok) throw new Error("Failed to load passenger payments");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getPaymentsByPassenger() failed:", err);
+    return [];
+  }
+};
+
+export const getPaymentStatistics = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/payments/statistics/overview`);
+    if (!res.ok) throw new Error("Failed to load payment statistics");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getPaymentStatistics() failed:", err);
+    return [];
+  }
+};
+
+export const getPaymentsByDateRange = async (startDate, endDate) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/payments/statistics/range?startDate=${startDate}&endDate=${endDate}`);
+    if (!res.ok) throw new Error("Failed to load payments by date range");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getPaymentsByDateRange() failed:", err);
+    return [];
+  }
+};
+
+// ===== BOOKING API FUNCTIONS =====
+export const createBooking = async (bookingData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/bookings`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bookingData),
+    });
+    if (!res.ok) throw new Error("Failed to create booking");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ createBooking() failed:", err);
+    throw err;
+  }
+};
+
+export const getBookingById = async (bookingId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/bookings/${bookingId}`);
+    if (!res.ok) throw new Error("Failed to load booking");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getBookingById() failed:", err);
+    throw err;
+  }
+};
+
+export const getBookingsByPassenger = async (passengerId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/bookings/passenger/${passengerId}`);
+    if (!res.ok) throw new Error("Failed to load passenger bookings");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getBookingsByPassenger() failed:", err);
+    return [];
+  }
+};
+
+export const updateBookingCancellationReason = async (bookingId, cancellationReason) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/cancellation`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cancellation_reason: cancellationReason }),
+    });
+    if (!res.ok) throw new Error("Failed to update booking cancellation reason");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ updateBookingCancellationReason() failed:", err);
+    throw err;
+  }
+};
+
+export const getBookingStatistics = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/bookings/statistics/overview`);
+    if (!res.ok) throw new Error("Failed to load booking statistics");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getBookingStatistics() failed:", err);
+    return [];
+  }
+};
+
+export const getCancelledBookings = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/bookings/statistics/cancelled`);
+    if (!res.ok) throw new Error("Failed to load cancelled bookings");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getCancelledBookings() failed:", err);
+    return [];
+  }
+};
+
+// ===== DISCOUNT API FUNCTIONS =====
+export const getAllDiscounts = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts`);
+    if (!res.ok) throw new Error("Failed to load discounts");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getAllDiscounts() failed:", err);
+    return [];
+  }
+};
+
+export const getActiveDiscounts = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts/active`);
+    if (!res.ok) throw new Error("Failed to load active discounts");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getActiveDiscounts() failed:", err);
+    return [];
+  }
+};
+
+export const createDiscount = async (discountData) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(discountData),
+    });
+    if (!res.ok) throw new Error("Failed to create discount");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ createDiscount() failed:", err);
+    throw err;
+  }
+};
+
+export const validateDiscountCode = async (code, passengerId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts/validate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code, passengerId }),
+    });
+    if (!res.ok) throw new Error("Failed to validate discount code");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ validateDiscountCode() failed:", err);
+    throw err;
+  }
+};
+
+export const applyDiscountToBooking = async (discountId, bookingId, passengerId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ discountId, bookingId, passengerId }),
+    });
+    if (!res.ok) throw new Error("Failed to apply discount to booking");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ applyDiscountToBooking() failed:", err);
+    throw err;
+  }
+};
+
+export const updateDiscountStatus = async (discountId, isActive) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts/${discountId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive }),
+    });
+    if (!res.ok) throw new Error("Failed to update discount status");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ updateDiscountStatus() failed:", err);
+    throw err;
+  }
+};
+
+export const deleteDiscount = async (discountId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts/${discountId}`, {
+      method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete discount");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ deleteDiscount() failed:", err);
+    throw err;
+  }
+};
+
+export const getDiscountUsageStatistics = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts/statistics/usage`);
+    if (!res.ok) throw new Error("Failed to load discount usage statistics");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getDiscountUsageStatistics() failed:", err);
+    return [];
+  }
+};
+
+export const getDiscountsByPassenger = async (passengerId) => {
+  try {
+    const res = await fetch(`${API_BASE}/api/discounts/by-passenger?passenger_id=${passengerId}`);
+    if (!res.ok) throw new Error("Failed to load passenger discounts");
+    const data = await res.json();
+    return data.success ? data.discounts : [];
+  } catch (err) {
+    console.error("❌ getDiscountsByPassenger() failed:", err);
+    throw err;
+  }
+};
+
+// ===== PASSENGER API FUNCTIONS =====
+export const getAllPassengers = async () => {
+  try {
+    const res = await fetch(`${API_BASE}/api/passenger`);
+    if (!res.ok) throw new Error("Failed to load passengers");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ getAllPassengers() failed:", err);
+    return [];
+  }
 };  

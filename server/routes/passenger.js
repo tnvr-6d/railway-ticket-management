@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const passengerController = require("../controllers/passenger");
 
+// Get all passengers with discount info
+router.get("/", passengerController.getAllPassengers);
+
 // Login route
 router.post("/login", passengerController.loginPassenger);
 

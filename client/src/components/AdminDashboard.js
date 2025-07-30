@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  getPendingCancellationRequests, 
+import {
+  getPendingCancellationRequests,
   confirmCancellationRequest,
   adminGetAllSchedules,
   adminGetAllTrains,
@@ -17,11 +17,20 @@ import {
   adminGetSeatInventoryByTrain,
   adminGetSeatInventoryBySchedule,
   adminAddSeatToSchedule,
+  adminBulkAddSeatsToSchedule,
   adminUpdateSeatAvailability,
   adminDeleteSeat,
   adminGetScheduleByTrain,
   getAllFeedback,
-  updateFeedbackStatus
+  updateFeedbackStatus,
+  createCoach,
+  updateCoach,
+  deleteCoach,
+  getAllPassengers,
+  createDiscount,
+  sendNotification,
+  updateDiscountStatus,
+  getDiscountsByPassenger
 } from '../api/api';
 import TrainLocationUploader from './TrainLocationUploader';
 
@@ -44,6 +53,7 @@ function AdminDashboard({ adminUser }) {
     const [showCreateSchedule, setShowCreateSchedule] = useState(false);
     const [showCreateTrain, setShowCreateTrain] = useState(false);
     const [showAddSeat, setShowAddSeat] = useState(false);
+    const [showBulkAddSeat, setShowBulkAddSeat] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState(null);
     const [editingTrain, setEditingTrain] = useState(null);
     const [feedbacks, setFeedbacks] = useState([]);
@@ -51,6 +61,15 @@ function AdminDashboard({ adminUser }) {
     const [feedbackError, setFeedbackError] = useState('');
     const [feedbackStatusUpdating, setFeedbackStatusUpdating] = useState(null);
     const [showUploader, setShowUploader] = useState(false);
+    const [showCreateCoach, setShowCreateCoach] = useState(false);
+    const [editingCoach, setEditingCoach] = useState(null);
+    const [passengers, setPassengers] = useState([]);
+    const [showDiscountModal, setShowDiscountModal] = useState(false);
+    const [selectedPassenger, setSelectedPassenger] = useState(null);
+    const [discountForm, setDiscountForm] = useState({
+        discount_percentage: '',
+        code: ''
+    });
 
     // Form states
     const [scheduleForm, setScheduleForm] = useState({
@@ -59,23 +78,32 @@ function AdminDashboard({ adminUser }) {
         departure_time: '',
         arrival_time: '',
         departure_date: '',
-        status: 'On Time'
+        status: 'On Time',
+        coach_id: ''
     });
 
     const [trainForm, setTrainForm] = useState({
         train_name: '',
-        coach_number: '',
-        class_type: '',
         total_seats: '',
         description: ''
     });
 
     const [seatForm, setSeatForm] = useState({
         seat_number: '',
-        coach_number: '',
-        class_type: '',
+        class_id: '',
+        coach_id: '',
         row_number: '',
         column_number: ''
+    });
+    const [bulkSeatForm, setBulkSeatForm] = useState({
+        coach_id: '',
+        total_seats: '',
+        seats_per_row: 4
+    });
+
+    const [coachForm, setCoachForm] = useState({
+        coach_number: '',
+        class_id: ''
     });
 
     const fetchRequests = useCallback(async () => {
@@ -126,10 +154,10 @@ function AdminDashboard({ adminUser }) {
         }
     }, []);
 
-    const fetchSeatInventory = useCallback(async (trainId) => {
-        if (!trainId) return;
+    const fetchSeatInventory = useCallback(async (scheduleId) => {
+        if (!scheduleId) return;
         try {
-            const data = await adminGetSeatInventoryByTrain(trainId);
+            const data = await adminGetSeatInventoryBySchedule(scheduleId);
             setSeatInventory(data || []);
         } catch (err) {
             setError('Failed to fetch seat inventory.');
@@ -149,19 +177,31 @@ function AdminDashboard({ adminUser }) {
         }
     }, []);
 
+    const fetchPassengers = useCallback(async () => {
+        try {
+            const data = await getAllPassengers();
+            setPassengers(data || []);
+        } catch (err) {
+            setError('Failed to fetch passengers.');
+        }
+    }, []);
+
     useEffect(() => {
         fetchRequests();
         fetchSchedules();
         fetchTrains();
         fetchSupportingData();
         fetchFeedbacks();
-    }, [fetchRequests, fetchSchedules, fetchTrains, fetchSupportingData, fetchFeedbacks]);
+        fetchPassengers();
+    }, [fetchRequests, fetchSchedules, fetchTrains, fetchSupportingData, fetchFeedbacks, fetchPassengers]);
 
     useEffect(() => {
-        if (selectedTrain) {
-            fetchSeatInventory(selectedTrain);
+        if (selectedSchedule) {
+            fetchSeatInventory(selectedSchedule);
+        } else {
+            setSeatInventory([]);
         }
-    }, [selectedTrain, fetchSeatInventory]);
+    }, [selectedSchedule, fetchSeatInventory]);
 
     const handleConfirm = async (ticketId) => {
         if (!window.confirm("Are you sure you want to confirm this cancellation?")) return;
@@ -188,7 +228,8 @@ function AdminDashboard({ adminUser }) {
                 departure_time: '',
                 arrival_time: '',
                 departure_date: '',
-                status: 'On Time'
+                status: 'On Time',
+                coach_id: ''
             });
             fetchSchedules();
         } catch (err) {
@@ -207,7 +248,8 @@ function AdminDashboard({ adminUser }) {
                 departure_time: '',
                 arrival_time: '',
                 departure_date: '',
-                status: 'On Time'
+                status: 'On Time',
+                coach_id: ''
             });
             fetchSchedules();
         } catch (err) {
@@ -232,8 +274,6 @@ function AdminDashboard({ adminUser }) {
             setShowCreateTrain(false);
             setTrainForm({
                 train_name: '',
-                coach_number: '',
-                class_type: '',
                 total_seats: '',
                 description: ''
             });
@@ -250,8 +290,6 @@ function AdminDashboard({ adminUser }) {
             setEditingTrain(null);
             setTrainForm({
                 train_name: '',
-                coach_number: '',
-                class_type: '',
                 total_seats: '',
                 description: ''
             });
@@ -278,21 +316,37 @@ function AdminDashboard({ adminUser }) {
             setShowAddSeat(false);
             setSeatForm({
                 seat_number: '',
-                coach_number: '',
-                class_type: '',
+                class_id: '',
+                coach_id: '',
                 row_number: '',
                 column_number: ''
             });
-            fetchSeatInventory(selectedTrain);
+            fetchSeatInventory(selectedSchedule);
         } catch (err) {
             alert('Failed to add seat: ' + err.message);
+        }
+    };
+
+    const handleBulkAddSeats = async (e) => {
+        e.preventDefault();
+        try {
+            await adminBulkAddSeatsToSchedule(selectedSchedule, bulkSeatForm);
+            setShowBulkAddSeat(false);
+            setBulkSeatForm({
+                coach_id: '',
+                total_seats: '',
+                seats_per_row: 4
+            });
+            fetchSeatInventory(selectedSchedule);
+        } catch (err) {
+            alert('Failed to add bulk seats: ' + err.message);
         }
     };
 
     const handleUpdateSeatAvailability = async (inventoryId, isAvailable) => {
         try {
             await adminUpdateSeatAvailability(inventoryId, isAvailable);
-            fetchSeatInventory(selectedTrain);
+            fetchSeatInventory(selectedSchedule);
         } catch (err) {
             alert('Failed to update seat availability: ' + err.message);
         }
@@ -302,7 +356,7 @@ function AdminDashboard({ adminUser }) {
         if (!window.confirm("Are you sure you want to delete this seat?")) return;
         try {
             await adminDeleteSeat(inventoryId);
-            fetchSeatInventory(selectedTrain);
+            fetchSeatInventory(selectedSchedule);
         } catch (err) {
             alert('Failed to delete seat: ' + err.message);
         }
@@ -316,7 +370,8 @@ function AdminDashboard({ adminUser }) {
             departure_time: schedule.departure_time,
             arrival_time: schedule.arrival_time,
             departure_date: schedule.departure_date,
-            status: schedule.status
+            status: schedule.status,
+            coach_id: schedule.coach_id || ''
         });
     };
 
@@ -324,11 +379,140 @@ function AdminDashboard({ adminUser }) {
         setEditingTrain(train);
         setTrainForm({
             train_name: train.train_name,
-            coach_number: train.coach_number,
-            class_type: train.class_type,
             total_seats: train.total_seats,
             description: train.description
         });
+    };
+
+    // Coach Management Functions
+    const handleCreateCoach = async (e) => {
+        e.preventDefault();
+        try {
+            await createCoach(coachForm);
+            setShowCreateCoach(false);
+            setCoachForm({
+                coach_number: '',
+                class_id: ''
+            });
+            fetchSupportingData(); // Refresh coaches data
+        } catch (err) {
+            alert('Failed to create coach: ' + err.message);
+        }
+    };
+
+    const handleUpdateCoach = async (e) => {
+        e.preventDefault();
+        try {
+            await updateCoach(editingCoach.coach_id, coachForm);
+            setEditingCoach(null);
+            setCoachForm({
+                coach_number: '',
+                class_id: ''
+            });
+            fetchSupportingData(); // Refresh coaches data
+        } catch (err) {
+            alert('Failed to update coach: ' + err.message);
+        }
+    };
+
+    const handleDeleteCoach = async (coachId) => {
+        if (!window.confirm("Are you sure you want to delete this coach?")) return;
+        try {
+            await deleteCoach(coachId);
+            fetchSupportingData(); // Refresh coaches data
+        } catch (err) {
+            alert('Failed to delete coach: ' + err.message);
+        }
+    };
+
+    const editCoach = (coach) => {
+        setEditingCoach(coach);
+        setCoachForm({
+            coach_number: coach.coach_number,
+            class_id: coach.class_id.toString()
+        });
+    };
+
+    const handleCreateDiscount = async (e) => {
+        e.preventDefault();
+        try {
+            const discountResult = await createDiscount({
+                ...discountForm,
+                passenger_id: selectedPassenger.passenger_id,
+                processed_by: adminUser.admin_id
+            });
+            
+            // Try to send notification to passenger (don't fail if notification fails)
+            let notificationSent = true;
+            try {
+                await sendNotification({
+                    passenger_id: selectedPassenger.passenger_id,
+                    title: "Discount Activated! 🎉",
+                    message: `Congratulations! You have received a ${discountForm.discount_percentage}% discount. Use code "${discountForm.code}" during your next ticket booking to get the discount.`,
+                    type: "discount"
+                });
+            } catch (notificationError) {
+                console.warn('Failed to send notification:', notificationError);
+                notificationSent = false;
+                // Continue with discount creation even if notification fails
+            }
+            
+            setShowDiscountModal(false);
+            setSelectedPassenger(null);
+            setDiscountForm({
+                discount_percentage: '',
+                code: ''
+            });
+            fetchPassengers(); // Refresh passenger data
+            alert(`Discount activated successfully!${!notificationSent ? ' (Notification failed to send)' : ''}`);
+        } catch (err) {
+            alert('Failed to create discount: ' + err.message);
+        }
+    };
+
+    const handleActivateDiscount = (passenger) => {
+        setSelectedPassenger(passenger);
+        setShowDiscountModal(true);
+    };
+
+    const handleViewPassengerInfo = (passenger) => {
+        alert(`Passenger Information:\n\nName: ${passenger.passenger_name}\nEmail: ${passenger.email}\nPhone: ${passenger.phone}\nAddress: ${passenger.address}\nCreated: ${new Date(passenger.created_at).toLocaleDateString()}`);
+    };
+
+    const handleDeactivateDiscount = async (passenger) => {
+        if (!window.confirm(`Are you sure you want to deactivate the discount for ${passenger.passenger_name}?`)) return;
+        
+        try {
+            // Find the discount for this passenger
+            const discounts = await getDiscountsByPassenger(passenger.passenger_id);
+            
+            if (discounts.length > 0) {
+                const discount = discounts[0];
+                await updateDiscountStatus(discount.discount_id, false);
+                
+                // Try to send notification to passenger (don't fail if notification fails)
+                let notificationSent = true;
+                try {
+                    await sendNotification({
+                        passenger_id: passenger.passenger_id,
+                        title: "Discount Deactivated",
+                        message: `Your discount code "${discount.code}" has been deactivated. Please contact support if you have any questions.`,
+                        type: "discount"
+                    });
+                } catch (notificationError) {
+                    console.warn('Failed to send notification:', notificationError);
+                    notificationSent = false;
+                    // Continue with deactivation even if notification fails
+                }
+                
+                fetchPassengers(); // Refresh passenger data
+                alert(`Discount deactivated successfully!${!notificationSent ? ' (Notification failed to send)' : ''}`);
+            } else {
+                alert('No active discount found for this passenger.');
+            }
+        } catch (err) {
+            alert('Failed to deactivate discount: ' + err.message);
+        }
     };
 
     const formatDate = (dateString) => new Date(dateString).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
@@ -350,7 +534,7 @@ function AdminDashboard({ adminUser }) {
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-gray-800">Pending Cancellations</h2>
                 <button onClick={fetchRequests} className="px-4 py-2 bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-blue-200" disabled={loading}>
-                  🔄 Refresh
+                    🔄 Refresh
                 </button>
             </div>
             
@@ -504,6 +688,22 @@ function AdminDashboard({ adminUser }) {
                                         </select>
                                     </div>
                                     <div>
+                                        <label className="block text-sm font-medium text-gray-700">Coach</label>
+                                        <select
+                                            value={scheduleForm.coach_id}
+                                            onChange={(e) => setScheduleForm({...scheduleForm, coach_id: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            required
+                                        >
+                                            <option value="">Select Coach</option>
+                                            {coaches.map(coach => (
+                                                <option key={coach.coach_id} value={coach.coach_id}>
+                                                    {coach.coach_number} - {coach.class_type}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
                                         <label className="block text-sm font-medium text-gray-700">Departure Date</label>
                                         <input
                                             type="date"
@@ -560,7 +760,8 @@ function AdminDashboard({ adminUser }) {
                                                 departure_time: '',
                                                 arrival_time: '',
                                                 departure_date: '',
-                                                status: 'On Time'
+                                                status: 'On Time',
+                                                coach_id: ''
                                             });
                                         }}
                                         className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -654,38 +855,7 @@ function AdminDashboard({ adminUser }) {
                                             required
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Coach Number</label>
-                                        <select
-                                            value={trainForm.coach_number}
-                                            onChange={(e) => setTrainForm({...trainForm, coach_number: e.target.value})}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                                            required
-                                        >
-                                            <option value="">Select Coach</option>
-                                            {coaches.map(coach => (
-                                                <option key={coach.coach_id} value={coach.coach_number}>
-                                                    {coach.coach_number}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Class Type</label>
-                                        <select
-                                            value={trainForm.class_type}
-                                            onChange={(e) => setTrainForm({...trainForm, class_type: e.target.value})}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                                            required
-                                        >
-                                            <option value="">Select Class</option>
-                                            {classes.map(cls => (
-                                                <option key={cls.class_id} value={cls.class_type}>
-                                                    {cls.class_type}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">Total Seats</label>
                                         <input
@@ -743,13 +913,22 @@ function AdminDashboard({ adminUser }) {
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-gray-800">Seat Inventory Management</h2>
-                <button 
-                    onClick={() => setShowAddSeat(true)} 
-                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
-                    disabled={!selectedSchedule}
-                >
-                    + Add Seat
-                </button>
+                <div className="flex space-x-3">
+                    <button 
+                        onClick={() => setShowAddSeat(true)} 
+                        className="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
+                        disabled={!selectedSchedule}
+                    >
+                        + Add Single Seat
+                    </button>
+                    <button 
+                        onClick={() => setShowBulkAddSeat(true)} 
+                        className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700"
+                        disabled={!selectedSchedule}
+                    >
+                        + Add Bulk Seats
+                    </button>
+                </div>
             </div>
 
             <div className="mb-6">
@@ -761,6 +940,7 @@ function AdminDashboard({ adminUser }) {
                             onChange={(e) => {
                                 setSelectedTrain(e.target.value);
                                 setSelectedSchedule('');
+                                setSeatInventory([]);
                             }}
                             className="block w-full border border-gray-300 rounded-md px-3 py-2"
                         >
@@ -793,7 +973,7 @@ function AdminDashboard({ adminUser }) {
                 </div>
             </div>
 
-            {selectedTrain && (
+            {selectedSchedule && (
                 <div className="bg-white rounded-lg shadow-md overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
@@ -867,35 +1047,48 @@ function AdminDashboard({ adminUser }) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Coach Number</label>
+                                        <label className="block text-sm font-medium text-gray-700">Class</label>
                                         <select
-                                            value={seatForm.coach_number}
-                                            onChange={(e) => setSeatForm({...seatForm, coach_number: e.target.value})}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                                            required
-                                        >
-                                            <option value="">Select Coach</option>
-                                            {coaches.map(coach => (
-                                                <option key={coach.coach_id} value={coach.coach_number}>
-                                                    {coach.coach_number}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Class Type</label>
-                                        <select
-                                            value={seatForm.class_type}
-                                            onChange={(e) => setSeatForm({...seatForm, class_type: e.target.value})}
+                                            value={seatForm.class_id}
+                                            onChange={(e) => {
+                                                setSeatForm({
+                                                    ...seatForm, 
+                                                    class_id: e.target.value,
+                                                    coach_id: '' // Reset coach when class changes
+                                                });
+                                            }}
                                             className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                                             required
                                         >
                                             <option value="">Select Class</option>
                                             {classes.map(cls => (
-                                                <option key={cls.class_id} value={cls.class_type}>
+                                                <option key={cls.class_id} value={cls.class_id}>
                                                     {cls.class_type}
                                                 </option>
                                             ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Coach</label>
+                                        <select
+                                            value={seatForm.coach_id}
+                                            onChange={(e) => setSeatForm({...seatForm, coach_id: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            required
+                                            disabled={!seatForm.class_id}
+                                        >
+                                            <option value="">Select Coach</option>
+                                            {coaches
+                                                .filter(coach => {
+                                                    if (!seatForm.class_id) return true;
+                                                    return coach.class_id === parseInt(seatForm.class_id);
+                                                })
+                                                .map(coach => (
+                                                    <option key={coach.coach_id} value={coach.coach_id}>
+                                                        {coach.coach_number} - {coach.class_type}
+                                                    </option>
+                                                ))
+                                            }
                                         </select>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
@@ -928,8 +1121,8 @@ function AdminDashboard({ adminUser }) {
                                             setShowAddSeat(false);
                                             setSeatForm({
                                                 seat_number: '',
-                                                coach_number: '',
-                                                class_type: '',
+                                                class_id: '',
+                                                coach_id: '',
                                                 row_number: '',
                                                 column_number: ''
                                             });
@@ -950,6 +1143,92 @@ function AdminDashboard({ adminUser }) {
                     </div>
                 </div>
             )}
+
+            {/* Bulk Add Seats Modal */}
+            {showBulkAddSeat && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div className="mt-3">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Add Bulk Seats</h3>
+                            <form onSubmit={handleBulkAddSeats}>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Select Coach</label>
+                                        <select
+                                            value={bulkSeatForm.coach_id}
+                                            onChange={(e) => setBulkSeatForm({...bulkSeatForm, coach_id: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            required
+                                        >
+                                            <option value="">Select a coach</option>
+                                            {coaches.map(coach => (
+                                                <option key={coach.coach_id} value={coach.coach_id}>
+                                                    {coach.coach_number} - {coach.class_type}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Total Number of Seats</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            value={bulkSeatForm.total_seats}
+                                            onChange={(e) => setBulkSeatForm({...bulkSeatForm, total_seats: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            placeholder="e.g., 20"
+                                            required
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Maximum 100 seats per bulk operation</p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Seats Per Row</label>
+                                        <select
+                                            value={bulkSeatForm.seats_per_row}
+                                            onChange={(e) => setBulkSeatForm({...bulkSeatForm, seats_per_row: parseInt(e.target.value)})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                        >
+                                            <option value="2">2 seats per row</option>
+                                            <option value="3">3 seats per row</option>
+                                            <option value="4">4 seats per row</option>
+                                            <option value="6">6 seats per row</option>
+                                        </select>
+                                    </div>
+                                    <div className="bg-blue-50 p-3 rounded-md">
+                                        <h4 className="text-sm font-medium text-blue-800 mb-2">Seat Naming Convention:</h4>
+                                        <p className="text-xs text-blue-700">
+                                            Seats will be named as: <strong>coach-{bulkSeatForm.coach_id || 'X'}-1</strong>, <strong>coach-{bulkSeatForm.coach_id || 'X'}-2</strong>, etc.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end space-x-3 mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowBulkAddSeat(false);
+                                            setBulkSeatForm({
+                                                coach_id: '',
+                                                total_seats: '',
+                                                seats_per_row: 4
+                                            });
+                                        }}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                                    >
+                                        Add Bulk Seats
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 
@@ -958,7 +1237,7 @@ function AdminDashboard({ adminUser }) {
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-3xl font-bold text-gray-800">Passenger Feedback</h2>
                 <button onClick={fetchFeedbacks} className="px-4 py-2 bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-blue-200" disabled={feedbackLoading}>
-                  🔄 Refresh
+                    🔄 Refresh
                 </button>
             </div>
             {feedbackError && <div className="text-red-600 text-center p-4 bg-red-100 rounded-md">{feedbackError}</div>}
@@ -1021,9 +1300,287 @@ function AdminDashboard({ adminUser }) {
         </div>
     );
 
+    const renderCoachesTab = () => (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">Coach Management</h2>
+                <button 
+                    onClick={() => setShowCreateCoach(true)} 
+                    className="px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
+                >
+                    + Add Coach
+                </button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coach ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coach Number</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Class Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {coaches.map(coach => (
+                                <tr key={coach.coach_id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{coach.coach_id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{coach.coach_number}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{coach.class_type}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button
+                                            onClick={() => editCoach(coach)}
+                                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteCoach(coach.coach_id)}
+                                            className="text-red-600 hover:text-red-900"
+                                        >
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Create/Edit Coach Modal */}
+            {(showCreateCoach || editingCoach) && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div className="mt-3">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                {editingCoach ? 'Edit Coach' : 'Create New Coach'}
+                            </h3>
+                            <form onSubmit={editingCoach ? handleUpdateCoach : handleCreateCoach}>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Coach Number</label>
+                                        <input
+                                            type="text"
+                                            value={coachForm.coach_number}
+                                            onChange={(e) => setCoachForm({...coachForm, coach_number: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            placeholder="e.g., A1, B2, C3"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Class</label>
+                                        <select
+                                            value={coachForm.class_id}
+                                            onChange={(e) => setCoachForm({...coachForm, class_id: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            required
+                                        >
+                                            <option value="">Select Class</option>
+                                            {classes.map(cls => (
+                                                <option key={cls.class_id} value={cls.class_id}>
+                                                    {cls.class_type}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end space-x-3 mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowCreateCoach(false);
+                                            setEditingCoach(null);
+                                            setCoachForm({
+                                                coach_number: '',
+                                                class_id: ''
+                                            });
+                                        }}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                                    >
+                                        {editingCoach ? 'Update' : 'Create'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
+    const renderDiscountsTab = () => (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold text-gray-800">Discount Management</h2>
+                <button 
+                    onClick={fetchPassengers} 
+                    className="px-4 py-2 bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-blue-200"
+                >
+                    🔄 Refresh
+                </button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Passenger ID</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Discount</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {passengers.map(passenger => (
+                                <tr key={passenger.passenger_id}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{passenger.passenger_id}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{passenger.passenger_name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{passenger.email}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{passenger.phone}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {passenger.active_discount ? (
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                {passenger.discount_code} ({passenger.discount_percentage}%)
+                                            </span>
+                                        ) : (
+                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                                No Discount
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        {passenger.active_discount ? (
+                                            <>
+                                                <button
+                                                    onClick={() => handleDeactivateDiscount(passenger)}
+                                                    className="text-red-600 hover:text-red-900 mr-3"
+                                                >
+                                                    Deactivate Discount
+                                                </button>
+                                                <button
+                                                    onClick={() => handleViewPassengerInfo(passenger)}
+                                                    className="text-blue-600 hover:text-blue-900"
+                                                >
+                                                    Info
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => handleActivateDiscount(passenger)}
+                                                    className="text-green-600 hover:text-green-900 mr-3"
+                                                >
+                                                    Activate Discount
+                                                </button>
+                                                <button
+                                                    onClick={() => handleViewPassengerInfo(passenger)}
+                                                    className="text-blue-600 hover:text-blue-900"
+                                                >
+                                                    Info
+                                                </button>
+                                            </>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Create Discount Modal */}
+            {showDiscountModal && selectedPassenger && (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                    <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                        <div className="mt-3">
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">
+                                Activate Discount for {selectedPassenger.passenger_name}
+                            </h3>
+                            <form onSubmit={handleCreateDiscount}>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Discount Code</label>
+                                        <input
+                                            type="text"
+                                            value={discountForm.code}
+                                            onChange={(e) => setDiscountForm({...discountForm, code: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            placeholder="e.g., STUDENT10, SENIOR15"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Discount Percentage</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            value={discountForm.discount_percentage}
+                                            onChange={(e) => setDiscountForm({...discountForm, discount_percentage: e.target.value})}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                                            placeholder="e.g., 10, 15, 20"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="flex justify-end space-x-3 mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowDiscountModal(false);
+                                            setSelectedPassenger(null);
+                                            setDiscountForm({
+                                                discount_percentage: '',
+                                                code: ''
+                                            });
+                                        }}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700"
+                                    >
+                                        Activate Discount
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
     return (
         <div className="min-h-screen bg-gray-100">
             <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                {/* Header Section */}
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900">Admin Dashboard</h1>
+                    <button
+                        className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg flex items-center space-x-2 transition"
+                        onClick={() => setShowUploader(true)}
+                    >
+                        <span>🚆</span>
+                        <span>Open Train Location Uploader</span>
+                    </button>
+                </div>
+
                 {/* Tab Navigation */}
                 <div className="border-b border-gray-200 mb-6">
                     <nav className="-mb-px flex space-x-8">
@@ -1077,6 +1634,26 @@ function AdminDashboard({ adminUser }) {
                         >
                             Feedback
                         </button>
+                        <button
+                            onClick={() => setActiveTab('coaches')}
+                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === 'coaches'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Coaches
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('discounts')}
+                            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                                activeTab === 'discounts'
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                        >
+                            Discounts
+                        </button>
                     </nav>
                 </div>
 
@@ -1086,14 +1663,8 @@ function AdminDashboard({ adminUser }) {
                 {activeTab === 'trains' && renderTrainsTab()}
                 {activeTab === 'seats' && renderSeatInventoryTab()}
                 {activeTab === 'feedback' && renderFeedbackTab()}
-                <div className="mb-4 flex justify-end">
-                    <button
-                        className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-lg"
-                        onClick={() => setShowUploader(true)}
-                    >
-                        🚆 Open Train Location Uploader
-                    </button>
-                </div>
+                {activeTab === 'coaches' && renderCoachesTab()}
+                {activeTab === 'discounts' && renderDiscountsTab()}
             </div>
             {showUploader && (
                 <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">

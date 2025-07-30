@@ -45,8 +45,6 @@ const getAllSchedules = async () => {
       s.status,
       s.created_at,
       t.train_name,
-      t.coach_number,
-      t.class_type,
       r.distance,
       r.duration,
       src.station_name AS source,
@@ -72,8 +70,6 @@ const getScheduleById = async (scheduleId) => {
       s.departure_date,
       s.status,
       t.train_name,
-      t.coach_number,
-      t.class_type,
       r.distance,
       r.duration,
       src.station_name AS source,
@@ -137,14 +133,10 @@ const getAllTrains = async () => {
     SELECT 
       t.train_id,
       t.train_name,
-      t.coach_number,
-      t.class_type,
       t.total_seats,
       t.description,
-      t.created_at,
-      c.class_type as class_name
+      t.created_at
     FROM train t
-    LEFT JOIN class c ON t.class_type = c.class_type
     ORDER BY t.train_id
   `);
   return result.rows;
@@ -155,40 +147,36 @@ const getTrainById = async (trainId) => {
     SELECT 
       t.train_id,
       t.train_name,
-      t.coach_number,
-      t.class_type,
       t.total_seats,
       t.description,
-      t.created_at,
-      c.class_type as class_name
+      t.created_at
     FROM train t
-    LEFT JOIN class c ON t.class_type = c.class_type
     WHERE t.train_id = $1
   `, [trainId]);
   return result.rows[0];
 };
 
 const createTrain = async (trainData) => {
-  const { train_name, coach_number, class_type, total_seats, description } = trainData;
+  const { train_name, total_seats, description } = trainData;
   
   const result = await pool.query(`
-    INSERT INTO train (train_name, coach_number, class_type, total_seats, description)
-    VALUES ($1, $2, $3, $4, $5)
+    INSERT INTO train (train_name, total_seats, description)
+    VALUES ($1, $2, $3)
     RETURNING *
-  `, [train_name, coach_number, class_type, total_seats, description]);
+  `, [train_name, total_seats, description]);
   
   return result.rows[0];
 };
 
 const updateTrain = async (trainId, trainData) => {
-  const { train_name, coach_number, class_type, total_seats, description } = trainData;
+  const { train_name, total_seats, description } = trainData;
   
   const result = await pool.query(`
     UPDATE train 
-    SET train_name = $1, coach_number = $2, class_type = $3, total_seats = $4, description = $5
-    WHERE train_id = $6
+    SET train_name = $1, total_seats = $2, description = $3
+    WHERE train_id = $4
     RETURNING *
-  `, [train_name, coach_number, class_type, total_seats, description, trainId]);
+  `, [train_name, total_seats, description, trainId]);
   
   return result.rows[0];
 };
@@ -255,7 +243,7 @@ const getAllCoaches = async () => {
 
 // Seat Inventory Management
 const createSeatInventory = async (scheduleId, trainData) => {
-  const { coach_number, class_type, total_seats } = trainData;
+  const { total_seats, coach_id } = trainData;
   
   // Generate seat numbers based on total seats
   const seats = [];
@@ -268,8 +256,7 @@ const createSeatInventory = async (scheduleId, trainData) => {
         seats.push({
           schedule_id: scheduleId,
           seat_number: seatNumber,
-          coach_number: coach_number,
-          class_type: class_type,
+          coach_id: coach_id,
           is_available: true,
           row_number: row,
           column_number: col
@@ -281,9 +268,9 @@ const createSeatInventory = async (scheduleId, trainData) => {
   // Insert all seats
   for (const seat of seats) {
     await pool.query(`
-      INSERT INTO seat_inventory (schedule_id, seat_number, coach_number, class_type, is_available, row_number, column_number)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, [seat.schedule_id, seat.seat_number, seat.coach_number, seat.class_type, seat.is_available, seat.row_number, seat.column_number]);
+      INSERT INTO seat_inventory (schedule_id, seat_number, coach_id, is_available, row_number, column_number)
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `, [seat.schedule_id, seat.seat_number, seat.coach_id, seat.is_available, seat.row_number, seat.column_number]);
   }
   
   return seats.length;
@@ -293,17 +280,19 @@ const createSeatInventory = async (scheduleId, trainData) => {
 const getSeatInventoryBySchedule = async (scheduleId) => {
   const result = await pool.query(`
     SELECT 
-      inventory_id,
-      schedule_id,
-      seat_number,
-      coach_number,
-      class_type,
-      is_available,
-      row_number,
-      column_number
-    FROM seat_inventory 
-    WHERE schedule_id = $1
-    ORDER BY row_number, column_number
+      si.inventory_id,
+      si.schedule_id,
+      si.seat_number,
+      si.is_available,
+      si.row_number,
+      si.column_number,
+      c.coach_number,
+      cl.class_type
+    FROM seat_inventory si
+    JOIN coach c ON si.coach_id = c.coach_id
+    JOIN class cl ON c.class_id = cl.class_id
+    WHERE si.schedule_id = $1
+    ORDER BY si.row_number, si.column_number
   `, [scheduleId]);
   return result.rows;
 };
@@ -314,17 +303,19 @@ const getSeatInventoryByTrain = async (trainId) => {
       si.inventory_id,
       si.schedule_id,
       si.seat_number,
-      si.coach_number,
-      si.class_type,
       si.is_available,
       si.row_number,
       si.column_number,
       s.departure_date,
       s.departure_time,
-      t.train_name
+      t.train_name,
+      c.coach_number,
+      cl.class_type
     FROM seat_inventory si
     JOIN schedule s ON si.schedule_id = s.schedule_id
     JOIN train t ON s.train_id = t.train_id
+    JOIN coach c ON si.coach_id = c.coach_id
+    JOIN class cl ON c.class_id = cl.class_id
     WHERE s.train_id = $1
     ORDER BY s.departure_date, s.departure_time, si.row_number, si.column_number
   `, [trainId]);
@@ -332,15 +323,70 @@ const getSeatInventoryByTrain = async (trainId) => {
 };
 
 const addSeatToSchedule = async (scheduleId, seatData) => {
-  const { seat_number, coach_number, class_type, row_number, column_number } = seatData;
+  const { seat_number, coach_id, row_number, column_number } = seatData;
   
   const result = await pool.query(`
-    INSERT INTO seat_inventory (schedule_id, seat_number, coach_number, class_type, is_available, row_number, column_number)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    INSERT INTO seat_inventory (schedule_id, seat_number, coach_id, is_available, row_number, column_number)
+    VALUES ($1, $2, $3, $4, $5, $6)
     RETURNING *
-  `, [scheduleId, seat_number, coach_number, class_type, true, row_number, column_number]);
+  `, [scheduleId, seat_number, coach_id, true, row_number, column_number]);
   
   return result.rows[0];
+};
+
+const bulkAddSeatsToSchedule = async (scheduleId, bulkSeatData) => {
+  const { coach_id, total_seats, seats_per_row } = bulkSeatData;
+  
+  // Get coach information for naming
+  const coachResult = await pool.query('SELECT coach_number FROM coach WHERE coach_id = $1', [coach_id]);
+  if (coachResult.rows.length === 0) {
+    throw new Error('Coach not found');
+  }
+  
+  const coachNumber = coachResult.rows[0].coach_number;
+  const seats = [];
+  
+  // Calculate rows needed
+  const totalRows = Math.ceil(total_seats / seats_per_row);
+  
+  let seatCounter = 1;
+  for (let row = 1; row <= totalRows; row++) {
+    for (let col = 1; col <= seats_per_row; col++) {
+      if (seatCounter <= total_seats) {
+        const seatNumber = `coach-${coachNumber}-${seatCounter}`;
+        seats.push({
+          schedule_id: scheduleId,
+          seat_number: seatNumber,
+          coach_id: coach_id,
+          is_available: true,
+          row_number: row,
+          column_number: col
+        });
+        seatCounter++;
+      }
+    }
+  }
+  
+  // Insert all seats in a transaction
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    
+    for (const seat of seats) {
+      await client.query(`
+        INSERT INTO seat_inventory (schedule_id, seat_number, coach_id, is_available, row_number, column_number)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [seat.schedule_id, seat.seat_number, seat.coach_id, seat.is_available, seat.row_number, seat.column_number]);
+    }
+    
+    await client.query('COMMIT');
+    return seats;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 };
 
 const updateSeatAvailability = async (inventoryId, isAvailable) => {
@@ -423,6 +469,7 @@ module.exports = {
   getSeatInventoryBySchedule,
   getSeatInventoryByTrain,
   addSeatToSchedule,
+  bulkAddSeatsToSchedule,
   updateSeatAvailability,
   deleteSeat,
   getScheduleByTrain,

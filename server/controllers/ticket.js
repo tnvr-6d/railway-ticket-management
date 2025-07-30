@@ -17,14 +17,30 @@ const getTicketsByPassenger = async (req, res) => {
 };
 
 const bookTicket = async (req, res) => {
-  const { passenger_id, schedule_id, seat_number } = req.body;
+  const { 
+    passenger_id, 
+    schedule_id, 
+    seat_number, 
+    original_price, 
+    discounted_price, 
+    discount_code, 
+    discount_percentage 
+  } = req.body;
   
   if (!passenger_id || !schedule_id || !seat_number) {
     return res.status(400).json({ error: "passenger_id, schedule_id, and seat_number are required" });
   }
 
   try {
-    const result = await ticketModel.bookTicket(passenger_id, schedule_id, seat_number);
+    const result = await ticketModel.bookTicket(
+      passenger_id, 
+      schedule_id, 
+      seat_number, 
+      original_price, 
+      discounted_price, 
+      discount_code, 
+      discount_percentage
+    );
     res.json(result);
   } catch (err) {
     console.error("❌ Booking failed:", err.message);

@@ -43,9 +43,9 @@ const getScheduleById = async (req, res) => {
 
 const createSchedule = async (req, res) => {
     try {
-        const { train_id, route_id, departure_time, arrival_time, departure_date, status } = req.body;
+        const { train_id, route_id, departure_time, arrival_time, departure_date, status, coach_id } = req.body;
         
-        if (!train_id || !route_id || !departure_time || !arrival_time || !departure_date) {
+        if (!train_id || !route_id || !departure_time || !arrival_time || !departure_date || !coach_id) {
             return res.status(400).json({ success: false, message: "All required fields must be provided" });
         }
         
@@ -59,8 +59,8 @@ const createSchedule = async (req, res) => {
             train_id, route_id, departure_time, arrival_time, departure_date, status
         });
         
-        // Create seat inventory for the new schedule
-        await adminModel.createSeatInventory(schedule.schedule_id, train);
+        // Create seat inventory for the new schedule with coach_id
+        await adminModel.createSeatInventory(schedule.schedule_id, { total_seats: train.total_seats, coach_id });
         
         res.status(201).json({ success: true, schedule });
     } catch (error) {
@@ -133,14 +133,14 @@ const getTrainById = async (req, res) => {
 
 const createTrain = async (req, res) => {
     try {
-        const { train_name, coach_number, class_type, total_seats, description } = req.body;
+        const { train_name, total_seats, description } = req.body;
         
-        if (!train_name || !coach_number || !class_type || !total_seats) {
-            return res.status(400).json({ success: false, message: "All required fields must be provided" });
+        if (!train_name || !total_seats) {
+            return res.status(400).json({ success: false, message: "Train name and total seats are required" });
         }
         
         const train = await adminModel.createTrain({
-            train_name, coach_number, class_type, total_seats, description
+            train_name, total_seats, description
         });
         
         res.status(201).json({ success: true, train });
@@ -152,14 +152,14 @@ const createTrain = async (req, res) => {
 const updateTrain = async (req, res) => {
     try {
         const { id } = req.params;
-        const { train_name, coach_number, class_type, total_seats, description } = req.body;
+        const { train_name, total_seats, description } = req.body;
         
-        if (!train_name || !coach_number || !class_type || !total_seats) {
-            return res.status(400).json({ success: false, message: "All required fields must be provided" });
+        if (!train_name || !total_seats) {
+            return res.status(400).json({ success: false, message: "Train name and total seats are required" });
         }
         
         const train = await adminModel.updateTrain(id, {
-            train_name, coach_number, class_type, total_seats, description
+            train_name, total_seats, description
         });
         
         if (!train) {
@@ -248,17 +248,40 @@ const getSeatInventoryBySchedule = async (req, res) => {
 const addSeatToSchedule = async (req, res) => {
     try {
         const { scheduleId } = req.params;
-        const { seat_number, coach_number, class_type, row_number, column_number } = req.body;
+        const { seat_number, coach_id, row_number, column_number } = req.body;
         
-        if (!seat_number || !coach_number || !class_type || !row_number || !column_number) {
+        if (!seat_number || !coach_id || !row_number || !column_number) {
             return res.status(400).json({ success: false, message: "All required fields must be provided" });
         }
         
         const seat = await adminModel.addSeatToSchedule(scheduleId, {
-            seat_number, coach_number, class_type, row_number, column_number
+            seat_number, coach_id, row_number, column_number
         });
         
         res.status(201).json({ success: true, seat });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const bulkAddSeatsToSchedule = async (req, res) => {
+    try {
+        const { scheduleId } = req.params;
+        const { coach_id, total_seats, seats_per_row } = req.body;
+        
+        if (!coach_id || !total_seats || !seats_per_row) {
+            return res.status(400).json({ success: false, message: "All required fields must be provided" });
+        }
+        
+        if (total_seats > 100) {
+            return res.status(400).json({ success: false, message: "Maximum 100 seats allowed per bulk operation" });
+        }
+        
+        const seats = await adminModel.bulkAddSeatsToSchedule(scheduleId, {
+            coach_id, total_seats, seats_per_row
+        });
+        
+        res.status(201).json({ success: true, seats, count: seats.length });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -329,6 +352,7 @@ module.exports = {
     getSeatInventoryByTrain,
     getSeatInventoryBySchedule,
     addSeatToSchedule,
+    bulkAddSeatsToSchedule,
     updateSeatAvailability,
     deleteSeat,
     getScheduleByTrain,

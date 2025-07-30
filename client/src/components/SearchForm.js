@@ -150,27 +150,27 @@ function SearchForm({ onResults }) {
   };
 
   return (
-    <div className="glass p-8 rounded-3xl shadow-2xl mb-12 relative z-20 max-w-6xl mx-auto border border-gray-200/50 shadow-lg">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold gradient-text mb-2">Search Trains</h2>
-        <p className="text-gray-600">Find your perfect journey</p>
-      </div>
-      <form onSubmit={handleSearch} className="grid grid-cols-12 gap-6 items-start">
+    <form onSubmit={handleSearch} className="grid grid-cols-12 gap-6 items-start">
 
         <div className="col-span-12 lg:col-span-3 relative" ref={sourceRef}>
-          <label htmlFor="source" className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-            <span className="mr-2">🚉</span>From
+          <label htmlFor="source" className="block text-sm font-semibold text-gray-800 mb-3 flex items-center">
+            <span className="mr-2 text-lg">🚉</span>From
           </label>
-          <input
-            id="source"
-            placeholder="Type a station name"
-            value={source}
-            onChange={e => handleStationInputChange(e.target.value, 'source')}
-            onFocus={() => handleInputFocus('source')}
-            onKeyDown={e => handleKeyDown(e, 'source')}
-            autoComplete="off"
-            className="form-input w-full px-4 py-3 text-gray-900 placeholder-gray-500"
-          />
+          <div className="relative">
+            <input
+              id="source"
+              placeholder="Type a station name"
+              value={source}
+              onChange={e => handleStationInputChange(e.target.value, 'source')}
+              onFocus={() => handleInputFocus('source')}
+              onKeyDown={e => handleKeyDown(e, 'source')}
+              autoComplete="off"
+              className="w-full px-4 py-4 text-gray-900 placeholder-gray-500 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-lg"
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+            </div>
+          </div>
           {showSourceSuggestions && sourceSuggestions.length > 0 && (
             <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg z-30 max-h-48 overflow-y-auto min-w-[200px]">
               {sourceSuggestions.map((s, index) => (
@@ -187,19 +187,24 @@ function SearchForm({ onResults }) {
         </div>
 
         <div className="col-span-12 lg:col-span-3 relative" ref={destinationRef}>
-          <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-            <span className="mr-2">🎯</span>To
+          <label htmlFor="destination" className="block text-sm font-semibold text-gray-800 mb-3 flex items-center">
+            <span className="mr-2 text-lg">🎯</span>To
           </label>
-          <input
-            id="destination"
-            placeholder="Type a station name"
-            value={destination}
-            onChange={e => handleStationInputChange(e.target.value, 'destination')}
-            onFocus={() => handleInputFocus('destination')}
-            onKeyDown={e => handleKeyDown(e, 'destination')}
-            autoComplete="off"
-            className="form-input w-full px-4 py-3 text-gray-900 placeholder-gray-500"
-          />
+          <div className="relative">
+            <input
+              id="destination"
+              placeholder="Type a station name"
+              value={destination}
+              onChange={e => handleStationInputChange(e.target.value, 'destination')}
+              onFocus={() => handleInputFocus('destination')}
+              onKeyDown={e => handleKeyDown(e, 'destination')}
+              autoComplete="off"
+              className="w-full px-4 py-4 text-gray-900 placeholder-gray-500 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-lg"
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+            </div>
+          </div>
           {showDestinationSuggestions && destinationSuggestions.length > 0 && (
             <div className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-b-lg shadow-lg z-30 max-h-48 overflow-y-auto min-w-[200px]">
               {destinationSuggestions.map((s, index) => (
@@ -216,60 +221,72 @@ function SearchForm({ onResults }) {
         </div>
 
         <div className="col-span-12 lg:col-span-2">
-          <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-            <span className="mr-2">📅</span>Date
+          <label htmlFor="date" className="block text-sm font-semibold text-gray-800 mb-3 flex items-center">
+            <span className="mr-2 text-lg">📅</span>Date
           </label>
-          <input
-            id="date"
-            type="date"
-            value={date}
-            onChange={e => setDate(e.target.value)}
-            min={today}
-            className="form-input w-full px-4 py-3 text-gray-900"
-          />
+          <div className="relative">
+            <input
+              id="date"
+              type="date"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+              min={today}
+              className="w-full px-4 py-4 text-gray-900 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-lg"
+            />
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+            </div>
+          </div>
         </div>
 
         <div className="col-span-12 lg:col-span-2">
-          <label htmlFor="class-type" className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-            <span className="mr-2">🎫</span>Class
+          <label htmlFor="class-type" className="block text-sm font-semibold text-gray-800 mb-3 flex items-center">
+            <span className="mr-2 text-lg">🎫</span>Class
           </label>
-          <select
-            id="class-type"
-            value={selectedClass}
-            onChange={e => setSelectedClass(e.target.value)}
-            className="form-input w-full px-4 py-3 text-gray-900"
-          >
-            {classes.length === 0 && <option>Loading...</option>}
-            {classes.map(c => (
-              <option key={c.class_type} value={c.class_type}>
-                {c.class_type}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              id="class-type"
+              value={selectedClass}
+              onChange={e => setSelectedClass(e.target.value)}
+              className="w-full px-4 py-4 text-gray-900 bg-white/80 backdrop-blur-sm border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-300 text-lg appearance-none"
+            >
+              {classes.length === 0 && <option>Loading...</option>}
+              {classes.map(c => (
+                <option key={c.class_type} value={c.class_type}>
+                  {c.class_type}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
 
         <div className="col-span-12 lg:col-span-2 mt-[30px] lg:mt-0">
-          <label className="block text-sm font-medium text-gray-700 mb-2">&nbsp;</label>
+          <label className="block text-sm font-semibold text-gray-800 mb-3">&nbsp;</label>
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full py-3 px-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? (
               <div className="flex items-center justify-center">
-                <div className="loading-spinner mr-2"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 Searching...
               </div>
             ) : (
-              <span className="flex items-center justify-center">
-                🔍 Search Trains
+              <span className="flex items-center justify-center text-lg">
+                <span className="mr-2">🔍</span>
+                Search Trains
               </span>
             )}
           </button>
         </div>
 
       </form>
-    </div>
   );
 }
 
