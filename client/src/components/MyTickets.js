@@ -1,18 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getMyTickets, requestCancellation, getTrainLocation } from '../api/api';
+import { getMyTickets, requestCancellation } from '../api/api';
 import { submitFeedback } from '../api/api';
 import { generateTicketPDF } from '../utils/pdfGenerator';
-import TrainLocationMap from './TrainLocationMap';
 
 function MyTickets({ passengerId }) {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [cancellingTicket, setCancellingTicket] = useState(null);
   const [error, setError] = useState('');
-  
   const [flippedTicketId, setFlippedTicketId] = useState(null);
 
-  // Feedback modal state
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackTicket, setFeedbackTicket] = useState(null);
   const [feedbackSubject, setFeedbackSubject] = useState('');
@@ -20,9 +17,6 @@ function MyTickets({ passengerId }) {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState('');
   const [feedbackSuccess, setFeedbackSuccess] = useState('');
-
-  const [showMapForTicket, setShowMapForTicket] = useState({});
-  const [trainLocations, setTrainLocations] = useState({});
 
   const fetchTickets = useCallback(async () => {
     if (passengerId) {
@@ -43,45 +37,11 @@ function MyTickets({ passengerId }) {
     fetchTickets();
   }, [fetchTickets]);
 
-  // Fetch train location for a ticket
-  const fetchTrainLocation = async (ticket) => {
-    // DEBUG: This line will print the full ticket object to your browser's console.
-    // Check the console to find the REAL property name for the train ID.
-    console.log("DEBUG: Full ticket object received:", ticket);
-
-    try {
-      // *****************************************************************
-      //
-      //   FIX THIS LINE
-      //
-      //   Look at the console log to find the correct property name for the train ID.
-      //   Then, replace 'ticket.train_id' with the correct one (e.g., ticket.train, ticket.trainid, etc.).
-      //
-      // *****************************************************************
-      const loc = await getTrainLocation(ticket.train_id);
-      setTrainLocations((prev) => ({ ...prev, [ticket.ticket_id]: loc }));
-    } catch (err) {
-      setTrainLocations((prev) => ({ ...prev, [ticket.ticket_id]: null }));
-    }
-  };
-
-  // Poll for location updates every 15s for visible maps
-  useEffect(() => {
-    const visibleTicketIds = Object.keys(showMapForTicket).filter((id) => showMapForTicket[id]);
-    if (visibleTicketIds.length === 0) return;
-    const interval = setInterval(() => {
-      tickets.forEach((ticket) => {
-        if (showMapForTicket[ticket.ticket_id]) fetchTrainLocation(ticket);
-      });
-    }, 15000);
-    return () => clearInterval(interval);
-  }, [showMapForTicket, tickets]);
-
   const handleCancel = async (ticket) => {
     const reason = prompt("Please provide a reason for cancellation:");
     if (!reason || reason.trim() === '') {
-        alert("A reason is required to request cancellation.");
-        return;
+      alert("A reason is required to request cancellation.");
+      return;
     }
 
     setCancellingTicket(ticket.ticket_id);
@@ -97,13 +57,9 @@ function MyTickets({ passengerId }) {
 
   const handleDownloadPDF = (ticket, event) => {
     try {
-      // Add visual feedback
       const button = event.target;
       button.classList.add('pdf-download-animation');
-      
       generateTicketPDF(ticket);
-      
-      // Remove animation class after animation completes
       setTimeout(() => {
         button.classList.remove('pdf-download-animation');
       }, 600);
@@ -118,19 +74,16 @@ function MyTickets({ passengerId }) {
       alert('No tickets to download.');
       return;
     }
-    
-    // Download each ticket as a separate PDF
     tickets.forEach((ticket, index) => {
       setTimeout(() => {
         generateTicketPDF(ticket);
-      }, index * 1000); // Stagger downloads by 1 second
+      }, index * 1000);
     });
   };
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   const formatTime = (timeString) => new Date(`1970-01-01T${timeString}`).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-  // Feedback modal handlers
   const openFeedbackModal = (ticket) => {
     setFeedbackTicket(ticket);
     setFeedbackSubject('');
@@ -176,6 +129,7 @@ function MyTickets({ passengerId }) {
   if (loading) {
     return <div className="text-center py-10 text-gray-500">Loading your tickets...</div>;
   }
+
   if (error) {
     return <div className="text-center py-10 text-red-600">{error}</div>;
   }
@@ -190,16 +144,16 @@ function MyTickets({ passengerId }) {
           </div>
           <div className="flex gap-3">
             {tickets.length > 0 && (
-              <button 
-                onClick={handleDownloadAllPDFs} 
+              <button
+                onClick={handleDownloadAllPDFs}
                 className="download-btn px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-medium rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 hover:scale-105 flex items-center"
               >
                 📄 Download All
               </button>
             )}
-            <button 
-              onClick={fetchTickets} 
-              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 hover:scale-105" 
+            <button
+              onClick={fetchTickets}
+              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-sm font-medium rounded-lg hover:from-indigo-600 hover:to-purple-600 transition-all duration-300 hover:scale-105"
               disabled={loading}
             >
               🔄 Refresh
@@ -215,7 +169,7 @@ function MyTickets({ passengerId }) {
           <p className="text-gray-500">You haven't booked any tickets yet.</p>
         </div>
       ) : (
-         <div className="grid lg:grid-cols-2 gap-x-8 gap-y-12 mb-16">
+        <div className="grid lg:grid-cols-2 gap-x-8 gap-y-12 mb-16">
           {tickets.map((ticket) => {
             const isCancelled = ticket.status === 'Cancelled';
             const isPending = ticket.status === 'Pending Cancellation';
@@ -226,17 +180,16 @@ function MyTickets({ passengerId }) {
             if (isCancelled) headerClass += "bg-gradient-to-r from-red-500 to-red-600";
             else if (isPending) headerClass += "bg-gradient-to-r from-gray-500 to-gray-600";
             else headerClass += "bg-gradient-to-r from-purple-600 to-indigo-600";
-            
+
             return (
               <div key={ticket.ticket_id} className="ticket-card">
                 {!isFlipped ? (
-                  // Front of card
                   <div className="ticket-card-front">
                     <div className={headerClass}>
                       <span>Ticket #{ticket.ticket_id}</span>
                       <span className="px-3 py-1 text-xs rounded-full bg-white/20">{ticket.status}</span>
                     </div>
-                    
+
                     <div className="p-6 flex-grow">
                       <div className="mb-4">
                         <div className="flex items-center text-xl font-semibold text-gray-800">
@@ -246,7 +199,7 @@ function MyTickets({ passengerId }) {
                         </div>
                         <div className="text-gray-600 mt-1">🚆 {ticket.train_name}</div>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-gray-700">
                         <span><strong>📅 Date:</strong> {formatDate(ticket.departure_date)}</span>
                         <span><strong>⏰ Departure:</strong> {formatTime(ticket.departure_time)}</span>
@@ -257,101 +210,73 @@ function MyTickets({ passengerId }) {
                       </div>
 
                       <div className="flex justify-between items-center mt-4">
-                          <button 
-                            onClick={(e) => handleDownloadPDF(ticket, e)} 
-                            className="download-btn text-sm font-semibold text-green-600 hover:text-green-800 flex items-center px-3 py-1 rounded-lg transition-all duration-300"
-                          >
-                            📄 Download PDF
-                          </button>
-                          <button 
-                            onClick={() => setFlippedTicketId(ticket.ticket_id)} 
-                            className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1 rounded-lg transition-all duration-300"
-                          >
-                              View Route Stations ↪
-                          </button>
+                        <button
+                          onClick={(e) => handleDownloadPDF(ticket, e)}
+                          className="download-btn text-sm font-semibold text-green-600 hover:text-green-800 flex items-center px-3 py-1 rounded-lg transition-all duration-300"
+                        >
+                          📄 Download PDF
+                        </button>
+                        <button
+                          onClick={() => setFlippedTicketId(ticket.ticket_id)}
+                          className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 px-3 py-1 rounded-lg transition-all duration-300"
+                        >
+                          View Route Stations ↪
+                        </button>
                       </div>
                     </div>
 
                     <div className="p-4 bg-gray-50 rounded-b-xl">
                       {!isValidTicket ? (
-                         isCancelled ? (
-                            <div className="text-center text-red-600 bg-red-100 p-3 rounded-md">❌ This ticket has been cancelled.</div>
-                          ) : (
-                            <div className="text-center text-gray-600 bg-gray-200 p-3 rounded-md">⏳ This ticket is pending cancellation approval.</div>
-                          )
+                        isCancelled ? (
+                          <div className="text-center text-red-600 bg-red-100 p-3 rounded-md">❌ This ticket has been cancelled.</div>
+                        ) : (
+                          <div className="text-center text-gray-600 bg-gray-200 p-3 rounded-md">⏳ This ticket is pending cancellation approval.</div>
+                        )
                       ) : (
                         <div className="space-y-2">
-                          <button 
-                            onClick={() => handleCancel(ticket)} 
-                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200" 
+                          <button
+                            onClick={() => handleCancel(ticket)}
+                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
                             disabled={cancellingTicket === ticket.ticket_id}
                           >
                             {cancellingTicket === ticket.ticket_id ? '⏳ Submitting...' : '❌ Request Cancellation'}
                           </button>
-                          
                           <button
                             onClick={() => openFeedbackModal(ticket)}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200"
                           >
                             💬 Give Feedback
                           </button>
-                          
-                          <button
-                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200 border-2 border-green-500 shadow-lg"
-                            onClick={async () => {
-                              setShowMapForTicket((prev) => ({ ...prev, [ticket.ticket_id]: !prev[ticket.ticket_id] }));
-                              if (!showMapForTicket[ticket.ticket_id]) await fetchTrainLocation(ticket);
-                            }}
-                          >
-                            {showMapForTicket[ticket.ticket_id] ? '🗺️ Hide Live Train Location' : '📍 Show Live Train Location'}
-                          </button>
-                        </div>
-                      )}
-                      
-                      {showMapForTicket[ticket.ticket_id] && (
-                        <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                          <div className="text-center mb-2">
-                            <h4 className="font-semibold text-gray-800">Live Train Location</h4>
-                            <p className="text-sm text-gray-600">{ticket.train_name}</p>
-                          </div>
-                          <TrainLocationMap
-                            latitude={trainLocations[ticket.ticket_id]?.latitude}
-                            longitude={trainLocations[ticket.ticket_id]?.longitude}
-                            trainName={ticket.train_name}
-                          />
                         </div>
                       )}
                     </div>
                   </div>
                 ) : (
-                  // Back of card
-                  <div className="ticket-card-back">
-                        <h3 className="text-xl font-bold text-white mb-6">🚆 Journey Route</h3>
-                      
-                      <div className="w-full max-w-sm mx-auto">
-                        <div className="space-y-3">
-                          {/* Route Stations */}
-                        </div>
+                  <div className="ticket-card-back p-6 bg-gradient-to-br from-indigo-700 to-purple-700 rounded-xl text-white">
+                    <h3 className="text-xl font-bold mb-6">🚆 Journey Route</h3>
+                    <div className="w-full max-w-sm mx-auto">
+                      <div className="space-y-3">
+                        {/* Route Stations could be shown here if available */}
                       </div>
-                      
-                      <div className="flex gap-3 mt-6">
-                        <button 
-                          onClick={(e) => handleDownloadPDF(ticket, e)} 
-                          className="download-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-300"
-                        >
-                          📄 PDF
-                        </button>
-                        <button 
-                          onClick={() => setFlippedTicketId(null)} 
-                          className="flex-1 bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 border border-white/30"
-                        >
-                          ← Back
-                        </button>
-                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button
+                        onClick={(e) => handleDownloadPDF(ticket, e)}
+                        className="download-btn flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-300"
+                      >
+                        📄 Download PDF
+                      </button>
+                      <button
+                        onClick={() => setFlippedTicketId(null)}
+                        className="flex-1 bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 border border-white/30"
+                      >
+                        ← Back
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       )}
