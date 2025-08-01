@@ -66,8 +66,42 @@ const checkPassenger = async (id) => {
     return rows[0];
 };
 
+const getAllPassengersWithDiscounts = async () => {
+    const { rows } = await pool.query(`
+        SELECT 
+            p.passenger_id,
+            p.name as passenger_name,
+            p.email,
+            p.phone_number as phone,
+            p.address,
+            p.created_at,
+            CASE 
+                WHEN active_discount.discount_id IS NOT NULL THEN true 
+                ELSE false 
+            END as active_discount,
+            active_discount.code as discount_code,
+            active_discount.discount_percentage
+        FROM passenger p
+        LEFT JOIN (
+            SELECT DISTINCT ON (d.passenger_id) 
+                d.passenger_id,
+                d.discount_id,
+                d.code,
+                d.discount_percentage
+            FROM discount d
+            JOIN discount_info di ON d.discount_id = di.discount_id
+            WHERE di.is_active = true
+            AND CURRENT_DATE BETWEEN di.start_date AND di.end_date
+            ORDER BY d.passenger_id, d.discount_id DESC
+        ) AS active_discount ON p.passenger_id = active_discount.passenger_id
+        ORDER BY p.passenger_id
+    `);
+    return rows;
+};
+
 module.exports = {
     loginPassenger,
     registerPassenger,
     checkPassenger,
+    getAllPassengersWithDiscounts,
 };

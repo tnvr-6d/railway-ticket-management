@@ -8,7 +8,7 @@ const getTicketsByPassenger = async (passenger_id) => {
     SELECT 
       t.ticket_id, t.status, t.seat_number, t.price, t.booking_date,
       s.departure_date, s.departure_time,
-      si.class_type, si.coach_number,
+      cl.class_type, c.coach_number,
       tr.train_name,
       st_src.station_name as source,
       st_dest.station_name as destination,
@@ -20,6 +20,8 @@ const getTicketsByPassenger = async (passenger_id) => {
     FROM ticket t
     JOIN schedule s ON t.schedule_id = s.schedule_id
     JOIN seat_inventory si ON t.schedule_id = si.schedule_id AND t.seat_number = si.seat_number
+    JOIN coach c ON si.coach_id = c.coach_id
+    JOIN class cl ON c.class_id = cl.class_id
     JOIN train tr ON s.train_id = tr.train_id
     JOIN route r ON s.route_id = r.route_id
     JOIN station st_src ON r.source_station_id = st_src.station_id
@@ -45,17 +47,19 @@ module.exports = {
   return rows;
 };*/
 
-const bookTicket = async (passenger_id, schedule_id, seat_number) => {
+const bookTicket = async (passenger_id, schedule_id, seat_number, original_price, discounted_price, discount_code, discount_percentage) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
     const seatCheck = await client.query(`
-      SELECT si.*, r.distance, f.per_km_fare
+      SELECT si.*, r.distance, f.per_km_fare, c.coach_id, cl.class_id
       FROM seat_inventory si
       JOIN schedule s ON si.schedule_id = s.schedule_id
       JOIN route r ON s.route_id = r.route_id
-      JOIN fare f ON si.coach_number = f.coach_number AND si.class_type = f.class_type
+      JOIN coach c ON si.coach_id = c.coach_id
+      JOIN class cl ON c.class_id = cl.class_id
+      JOIN fare f ON cl.class_id = f.class_id
       WHERE si.schedule_id = $1 AND si.seat_number = $2 AND si.is_available = true
     `, [schedule_id, seat_number]);
 
@@ -64,13 +68,14 @@ const bookTicket = async (passenger_id, schedule_id, seat_number) => {
     }
 
     const seatInfo = seatCheck.rows[0];
-    const ticketPrice = (seatInfo.distance * seatInfo.per_km_fare).toFixed(2);
+    // Use discounted price if provided, otherwise calculate original price
+    const finalPrice = discounted_price || (seatInfo.distance * seatInfo.per_km_fare).toFixed(2);
 
     const paymentResult = await client.query(`
       INSERT INTO payment (amount, transaction_id, payment_status)
       VALUES ($1, $2, 'Completed')
       RETURNING payment_id
-    `, [ticketPrice, `TXN-${Date.now()}-${passenger_id}`]);
+    `, [finalPrice, `TXN-${Date.now()}-${passenger_id}`]);
     
     const payment_id = paymentResult.rows[0].payment_id;
 
@@ -84,8 +89,8 @@ const bookTicket = async (passenger_id, schedule_id, seat_number) => {
 
     const fareResult = await client.query(`
       SELECT fare_id FROM fare 
-      WHERE coach_number = $1 AND class_type = $2
-    `, [seatInfo.coach_number, seatInfo.class_type]);
+      WHERE class_id = $1
+    `, [seatInfo.class_id]);
     
     const fare_id = fareResult.rows[0].fare_id;
 
@@ -96,9 +101,18 @@ const bookTicket = async (passenger_id, schedule_id, seat_number) => {
       )
       VALUES ($1, $2, $3, $4, $5, 'Booked', $6)
       RETURNING ticket_id
-    `, [fare_id, passenger_id, schedule_id, seat_number, ticketPrice, payment_id]);
+    `, [fare_id, passenger_id, schedule_id, seat_number, finalPrice, payment_id]);
     
     const ticket_id = ticketResult.rows[0].ticket_id;
+
+    // If discount was applied, mark the discount as used
+    if (discount_code && discount_percentage) {
+      await client.query(`
+        UPDATE discount 
+        SET used_at = CURRENT_TIMESTAMP
+        WHERE code = $1 AND passenger_id = $2
+      `, [discount_code, passenger_id]);
+    }
 
     await client.query(`
       INSERT INTO ticket_booking (ticket_id, booking_id)
@@ -118,7 +132,10 @@ const bookTicket = async (passenger_id, schedule_id, seat_number) => {
       ticket_id, 
       booking_id, 
       payment_id,
-      price: ticketPrice,
+      price: finalPrice,
+      original_price: original_price || finalPrice,
+      discounted_price: discounted_price,
+      discount_applied: !!discounted_price,
       message: 'Ticket booked successfully' 
     };
   } catch (err) {
@@ -198,7 +215,7 @@ const getPendingCancellations = async () => {
             s.departure_time,
             st_src.station_name AS source,
             st_dest.station_name AS destination,
-            si.class_type -- This line is important
+            cl.class_type
         FROM ticket t
         JOIN passenger p ON t.passenger_id = p.passenger_id
         JOIN schedule s ON t.schedule_id = s.schedule_id
@@ -208,7 +225,9 @@ const getPendingCancellations = async () => {
         JOIN station st_dest ON r.destination_station_id = st_dest.station_id
         JOIN ticket_booking tb ON t.ticket_id = tb.ticket_id
         JOIN booking b ON tb.booking_id = b.booking_id
-        JOIN seat_inventory si ON t.schedule_id = si.schedule_id AND t.seat_number = si.seat_number -- This JOIN is important
+        JOIN seat_inventory si ON t.schedule_id = si.schedule_id AND t.seat_number = si.seat_number
+        JOIN coach c ON si.coach_id = c.coach_id
+        JOIN class cl ON c.class_id = cl.class_id
         WHERE t.status = 'Pending Cancellation'
         ORDER BY t.booking_date DESC;
     `;
@@ -269,7 +288,6 @@ const confirmCancellation = async (ticket_id, admin_id) => {
     }
 };
 const getAvailableSeats = async (schedule_id) => {
-    // For now, only filter by class_type. In the future, add coach_number to the WHERE clause for more granular filtering.
     const result = await pool.query(`
         SELECT 
             si.*,
@@ -278,16 +296,13 @@ const getAvailableSeats = async (schedule_id) => {
             f.per_km_fare,
             r.distance
         FROM seat_inventory si
-        JOIN coach c ON si.coach_number = c.coach_number
-        JOIN class cl ON si.class_type = cl.class_type
+        JOIN coach c ON si.coach_id = c.coach_id
+        JOIN class cl ON c.class_id = cl.class_id
         JOIN schedule s ON si.schedule_id = s.schedule_id
         JOIN route r ON s.route_id = r.route_id
-        JOIN fare f ON si.coach_number = f.coach_number AND si.class_type = f.class_type
+        JOIN fare f ON cl.class_id = f.class_id
         WHERE si.schedule_id = $1
-
-        
-      
-        ORDER BY si.coach_number, si.seat_number
+        ORDER BY c.coach_number, si.seat_number
     `, [schedule_id]);
 
     const seats = result.rows.map(seat => ({

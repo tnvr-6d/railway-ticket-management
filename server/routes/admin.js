@@ -29,6 +29,7 @@ router.get("/coaches", adminController.getAllCoaches);
 router.get("/trains/:trainId/seats", adminController.getSeatInventoryByTrain);
 router.get("/schedules/:scheduleId/seats", adminController.getSeatInventoryBySchedule);
 router.post("/schedules/:scheduleId/seats", adminController.addSeatToSchedule);
+router.post("/schedules/:scheduleId/seats/bulk", adminController.bulkAddSeatsToSchedule);
 router.put("/seats/:inventoryId/availability", adminController.updateSeatAvailability);
 router.delete("/seats/:inventoryId", adminController.deleteSeat);
 router.get("/trains/:trainId/schedules", adminController.getScheduleByTrain);

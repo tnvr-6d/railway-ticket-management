@@ -132,15 +132,15 @@ function ScheduleList({ schedules, onSelectSchedule }) {
               >
                 {showMapForTrain === schedule.train_id ? 'Hide Live Location' : 'Show Live Location'}
               </button>
-              {showMapForTrain === schedule.train_id && (
-                <div className="my-4">
-                  <TrainLocationMap
-                    latitude={trainLocations[schedule.train_id]?.latitude}
-                    longitude={trainLocations[schedule.train_id]?.longitude}
-                    trainName={schedule.train_name}
-                  />
-                </div>
-              )}
+                                {showMapForTrain === schedule.train_id && (
+                    <div className="my-4">
+                      <TrainLocationMap
+                        latitude={trainLocations[schedule.train_id]?.latitude}
+                        longitude={trainLocations[schedule.train_id]?.longitude}
+                        trainName={schedule.train_name}
+                      />
+                    </div>
+                  )}
             </div>
           </div>
         );

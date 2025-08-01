@@ -42,8 +42,25 @@ const getUnreadCount = async (req, res) => {
     }
 };
 
+const sendNotification = async (req, res) => {
+    const { passenger_id, title, message, type } = req.body;
+    if (!passenger_id || !title || !message) {
+        return res.status(400).json({ error: "passenger_id, title, and message are required" });
+    }
+    try {
+        // Combine title and message for the notification
+        const fullMessage = `${title}\n\n${message}`;
+        const notification = await notificationModel.createNotification(passenger_id, fullMessage, type);
+        res.status(201).json(notification);
+    } catch (err) {
+        console.error("❌ Sending notification failed:", err.message);
+        res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     getNotifications,
     markAsRead,
-    getUnreadCount
+    getUnreadCount,
+    sendNotification
 }; 

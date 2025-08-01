@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { loginPassenger, loginAdmin } from "../api/api";
 
 function Login({ onLogin, onAdminLogin, onlyPassenger, onlyAdmin }) {
-  const [loginType, setLoginType] = useState('passenger');
+  const [loginType, setLoginType] = useState(onlyAdmin ? 'admin' : 'passenger');
   
   const [passengerEmail, setPassengerEmail] = useState("");
   const [passengerPassword, setPassengerPassword] = useState("");
@@ -58,16 +58,18 @@ function Login({ onLogin, onAdminLogin, onlyPassenger, onlyAdmin }) {
         </header>
       )}
       <main className="py-12 px-4">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-start">
+        <div className="max-w-6xl mx-auto">
           <div className="bg-white p-8 rounded-2xl shadow-xl">
-            <div className="flex border-b mb-6">
-              <button onClick={() => setLoginType('passenger')} className={`flex-1 py-2 font-semibold ${loginType === 'passenger' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
-                Passenger Login
-              </button>
-              <button onClick={() => setLoginType('admin')} className={`flex-1 py-2 font-semibold ${loginType === 'admin' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
-                Admin Login
-              </button>
-            </div>
+            {(!onlyAdmin && !onlyPassenger) && (
+              <div className="flex border-b mb-6">
+                <button onClick={() => setLoginType('passenger')} className={`flex-1 py-2 font-semibold ${loginType === 'passenger' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
+                  Passenger Login
+                </button>
+                <button onClick={() => setLoginType('admin')} className={`flex-1 py-2 font-semibold ${loginType === 'admin' ? 'text-indigo-600 border-b-2 border-indigo-600' : 'text-gray-500'}`}>
+                  Admin Login
+                </button>
+              </div>
+            )}
 
             {loginType === 'passenger' ? (
               <form onSubmit={handlePassengerLogin} className="space-y-6">
@@ -102,21 +104,6 @@ function Login({ onLogin, onAdminLogin, onlyPassenger, onlyAdmin }) {
                 </button>
               </form>
             )}
-          </div>
-          {/* Features panel */}
-          <div className="space-y-6 pt-4">
-            <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
-              <div className="text-3xl">🎫</div>
-              <div><h3 className="font-bold text-lg text-gray-800">Easy Booking</h3><p className="text-gray-600">Book train tickets in just a few clicks.</p></div>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
-              <div className="text-3xl">🔒</div>
-              <div><h3 className="font-bold text-lg text-gray-800">Secure & Safe</h3><p className="text-gray-600">Your data is protected with industry-standard security.</p></div>
-            </div>
-            <div className="bg-white p-6 rounded-xl shadow-lg flex items-start gap-4 hover:shadow-xl transition">
-              <div className="text-3xl">📞</div>
-              <div><h3 className="font-bold text-lg text-gray-800">24/7 Support</h3><p className="text-gray-600">Our customer service team is always ready to help.</p></div>
-            </div>
           </div>
         </div>
       </main>

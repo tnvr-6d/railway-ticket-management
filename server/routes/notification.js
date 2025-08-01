@@ -11,4 +11,7 @@ router.post('/mark-read', notificationController.markAsRead);
 // Get unread notification count
 router.get('/unread-count', notificationController.getUnreadCount);
 
+// Send notification
+router.post('/', notificationController.sendNotification);
+
 module.exports = router; 
